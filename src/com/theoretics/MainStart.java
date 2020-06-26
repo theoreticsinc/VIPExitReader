@@ -60,8 +60,8 @@ public class MainStart {
 
     final GpioController gpio = GpioFactory.getInstance();
 
-//    final GpioPinDigitalOutput relayBarrier = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_05, "BARRIER", PinState.LOW);
-    final GpioPinDigitalOutput relayBarrier = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_09, "BARRIER", PinState.LOW);
+    final GpioPinDigitalOutput relayBarrier = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_05, "BARRIER", PinState.LOW);
+    //final GpioPinDigitalOutput relayBarrier = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_09, "BARRIER", PinState.LOW);
 
     public void showInfo() {
         // display a few of the available system information properties
@@ -314,7 +314,7 @@ public class MainStart {
         System.out.println("Exiting SystemInfoExample");
     }
 
-    public void startProgram() {
+    public void NewstartProgram() {
         System.out.println(entranceID + " Tap Card Listener " + version);
 //        System.out.println(entranceID + " Tap Card Listener " + version);
         try {
@@ -447,10 +447,10 @@ public class MainStart {
                     DataBaseHandler dbh = new DataBaseHandler();
                     String cardHolder = dbh.findVIPcard(cardFromReader);
                     if (cardHolder.compareTo("") != 0) {
-                        
+
                         relayBarrier.low(); //RELAY ON
                         System.out.println("Barrier Open!");
-                        try{
+                        try {
                             dbh.deleteVIP(cardFromReader);
                             dbh.exitVIP(cardFromReader);
                         } catch (Exception ex) {
@@ -465,7 +465,7 @@ public class MainStart {
                             Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
                         }
                         if (dbh.exitVIP(cardFromReader)) {
-                            dbh.sendMessage(0, "VIP Card" + cardFromReader + " successful Exit", "VIP Exit", "EX01");                            
+                            dbh.sendMessage(0, "VIP Card" + cardFromReader + " successful Exit", "VIP Exit", "EX01");
                         } else {
                             if (dbh.exitVIP(cardFromReader)) {
                                 dbh.sendMessage(0, "VIP Card" + cardFromReader + " successful Exit", "VIP Exit", "EX01");
@@ -473,7 +473,7 @@ public class MainStart {
                                 dbh.sendMessage(0, " Please try to exit " + cardFromReader + " again", "VIP Exit", "EX01");
                             }
                         }
-                        
+
                     } else if (cardFromReader.compareToIgnoreCase("3B40CB73") == 0) {
                         relayBarrier.low(); //RELAY ON
                         System.out.println("MASTER KEY == Barrier Open!");
@@ -504,6 +504,191 @@ public class MainStart {
 //            } catch (InterruptedException ex) {
 //                Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
 //            }
+        }
+
+    }
+
+//Still Uses Old Reader    
+    public void startProgram() {
+        System.out.println(entranceID + " Tap Card Listener " + version);
+//        System.out.println(entranceID + " Tap Card Listener " + version);
+        try {
+            welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/welcome.wav"));
+            welcomeClip = AudioSystem.getClip();
+            welcomeClip.open(welcomeAudioIn);
+        } catch (Exception ex) {
+            notifyError(ex);
+        }
+        try {
+            pleasewaitAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/plswait.wav"));
+            pleaseWaitClip = AudioSystem.getClip();
+            pleaseWaitClip.open(pleasewaitAudioIn);
+        } catch (Exception ex) {
+            notifyError(ex);
+        }
+        try {
+            thankyouAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/thankyou.wav"));
+            thankyouClip = AudioSystem.getClip();
+            thankyouClip.open(thankyouAudioIn);
+        } catch (Exception ex) {
+            notifyError(ex);
+        }
+        try {
+            beepAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/beep.wav"));
+            beepClip = AudioSystem.getClip();
+            beepClip.open(beepAudioIn);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        try {
+            cartoonCardAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/cartoon.wav"));
+            cartoonCardClip = AudioSystem.getClip();
+            cartoonCardClip.open(cartoonCardAudioIn);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        try {
+            errorAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/beep.wav"));
+            errorClip = AudioSystem.getClip();
+            errorClip.open(errorAudioIn);
+        } catch (Exception ex) {
+            notifyError(ex);
+        }
+
+        try {
+            bgAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/bgmusic.wav"));
+            bgClip = AudioSystem.getClip();
+            bgClip.open(bgAudioIn);
+        } catch (Exception ex) {
+            notifyError(ex);
+        }
+
+        try {
+            if (welcomeClip.isActive() == false) {
+                welcomeClip.setFramePosition(0);
+                welcomeClip.start();
+                System.out.println("Welcome Message OK");
+            }
+        } catch (Exception ex) {
+            notifyError(ex);
+        }
+
+        this.cards = new ArrayList<String>();
+
+        //RaspRC522 rc522 = new RaspRC522();
+        int back_bits[] = new int[1];
+
+        byte tagid[] = new byte[5];
+        int i, status;
+        byte blockaddress = 8;  //读写块地址0-63
+        byte sector = 15, block = 2;
+
+//        NetworkClock nc = new NetworkClock(this.cards);
+//        ThrNetworkClock = new Thread(nc);
+//        ThrNetworkClock.start();
+        RaspRC522 rc522 = new RaspRC522();
+        rc522.RC522_Init();
+        System.out.println("Reader Ready!");
+//        transistorDispense.pulse(1000, true);
+//        Gpio.delay(2000);
+//        transistorReject.pulse(1000, true);
+        //Testing Remotely
+//        cards.add("ABC1234");
+        while (true) {
+//            
+            Date now = new Date();
+            //System.out.println("Hour :  " + now.getHours());
+            if (now.getHours() >= 18) {
+                //relayLights.low();
+            }
+            try {
+                if (SystemInfo.getCpuTemperature() >= 45) {
+                    System.out.println("CPU Temperature   :  " + SystemInfo.getCpuTemperature());
+                    //relayFan.low();
+                } else {
+                    //relayFan.high();
+                }
+            } catch (Exception ex) {
+            }
+
+            rc522.Reader_Init();
+            //System.out.print("!");
+            int stats = 0;
+            stats = rc522.Select_MifareOne(tagid);
+            strUID = "";
+            if (stats != 2) {
+                //System.out.println("" + stats);
+                strUID = Convert.bytesToHex(tagid);
+                if (prevUID.compareToIgnoreCase(strUID) != 0) {
+                    //Uncomment Below to disable Read same Card
+                    //prevUID = strUID;
+
+                    System.out.println("Card Read UID:" + strUID.substring(0, 8));
+                    cardFromReader = strUID.substring(0, 8).toUpperCase();
+                    DataBaseHandler dbh = new DataBaseHandler();
+                    String cardHolder = dbh.findVIPcard(cardFromReader);
+                    if (cardHolder.compareTo("") != 0) {
+
+                        relayBarrier.low(); //RELAY ON
+                        System.out.println("Barrier Open!");
+                        try {
+                            dbh.deleteVIP(cardFromReader);
+                            dbh.exitVIP(cardFromReader);
+                        } catch (Exception ex) {
+                            Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        try {
+                            Thread.sleep(500);
+                            relayBarrier.high();
+                            Thread.sleep(1500);
+                            dbh.sendMessage(0, " Thank you " + cardHolder + "!", "VIP Exit", "EX01");
+                        } catch (Exception ex) {
+                            Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        if (dbh.exitVIP(cardFromReader)) {
+                            dbh.sendMessage(0, "VIP Card" + cardFromReader + " successful Exit", "VIP Exit", "EX01");
+                        } else {
+                            if (dbh.exitVIP(cardFromReader)) {
+                                dbh.sendMessage(0, "VIP Card" + cardFromReader + " successful Exit", "VIP Exit", "EX01");
+                            } else {
+                                dbh.sendMessage(0, " Please try to exit " + cardFromReader + " again", "VIP Exit", "EX01");
+                            }
+                        }
+
+                    } else if (cardFromReader.compareToIgnoreCase("3B40CB73") == 0) {
+                        relayBarrier.low(); //RELAY ON
+                        System.out.println("MASTER KEY == Barrier Open!");
+                        try {
+                            Thread.sleep(500);
+                            relayBarrier.high();
+                            Thread.sleep(1500);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+//
+//                    if (cardFromReader.compareToIgnoreCase("") != 0) {
+//                        cards.add(cardFromReader);
+//                        
+//                        //byte[] buffer2 = {0x2E};
+//                        //comPort.writeBytes(buffer2, 1);
+//                    }
+
+                    // turn on gpio pin1 #01 for 1 second and then off
+                    //System.out.println("--> GPIO state should be: ON for only 3 second");
+                    // set second argument to 'true' use a blocking call
+//                    c.showWelcome(700, false);
+                }
+            }
+            rc522.Stop_Crypto();
+            rc522.AntennaOff();
+//            strUID = null;
+            try {
+                //Thread.sleep(500);
+                Thread.sleep(1200);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
     }
