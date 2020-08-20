@@ -314,7 +314,7 @@ public class MainStart {
         System.out.println("Exiting SystemInfoExample");
     }
 
-    public void NewstartProgram() {
+    public void NewstartProgram() { //BACKUP 08202020
         System.out.println(entranceID + " Tap Card Listener " + version);
 //        System.out.println(entranceID + " Tap Card Listener " + version);
         try {
