@@ -45,7 +45,7 @@ public class DataBaseHandler extends Thread {
     //private String MainServer_URL = "jdbc:mysql://localhost/";
     //private String SubServer_URL = "jdbc:mysql://192.168.100.228/";
     //private String SubServer_URL = "jdbc:mysql://localhost/";
-//    private String CAMipaddress = "192.168.100.220";
+//    private String CAMipaddress1 = "192.168.100.220";
 //    private String CAMusername = "admin";
 //    private String CAMpassword = "user1234";
 //    private String USERNAME = "root";   //root
@@ -211,7 +211,7 @@ public class DataBaseHandler extends Thread {
 
             public boolean verify(String hostname,
                     javax.net.ssl.SSLSession sslSession) {
-                return hostname.equals(CONSTANTS.CAMipaddress);
+                return hostname.equals(CONSTANTS.CAMipaddress1);
             }
         });
         Authenticator.setDefault(new Authenticator() {
@@ -226,7 +226,7 @@ public class DataBaseHandler extends Thread {
             //URL url = new URL("http://www.avajava.com/images/avajavalogo.jpg");
             //URL url = new URL("http://admin:user1234@192.168.1.64/Streaming/channels/1/picture");
             //URL url = new URL("http://192.168.1.64/onvif-http/snapshot?Profile_1");
-            URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
+            URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress1 + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
             //URL url = new URL("http://192.168.1.190/onvifsnapshot/media_service/snapshot?channel=1&subtype=1");
             //http://admin:user1234@192.168.1.64/onvif-http/snapshot?Profile_1
             //URL url = new URL("http://admin:admin888888@192.168.1.190/cgi-bin/snapshot.cgi?loginuse=admin&loginpas=admin888888");
@@ -267,7 +267,7 @@ public class DataBaseHandler extends Thread {
             is1 = (InputStream) uc1.getInputStream();
             is2 = (InputStream) uc2.getInputStream();
             connection = getConnection(false);
-            statement = connection.prepareStatement("insert into unidb.timeindb(CardCode, Plate, PIC2, PIC) " + "values(?,?,?,?)");
+            statement = connection.prepareStatement("insert into vips.dtr(CardCode, Plate, PIC2, PIC) " + "values(?,?,?,?)");
             statement.setString(1, "HFJ93230");
             statement.setString(2, "ABCDEFG");
             statement.setBinaryStream(3, is1, 1024 * 32); //Last Parameter has to be bigger than actual 
@@ -305,7 +305,7 @@ public class DataBaseHandler extends Thread {
 
             public boolean verify(String hostname,
                     javax.net.ssl.SSLSession sslSession) {
-                return hostname.equals(CONSTANTS.CAMipaddress);
+                return hostname.equals(CONSTANTS.CAMipaddress1);
             }
         });
         Authenticator.setDefault(new Authenticator() {
@@ -316,7 +316,7 @@ public class DataBaseHandler extends Thread {
 ////        try {
 //////            OLD SQL
 ////            connection = getConnection(false);
-////            statement = connection.prepareStatement("INSERT INTO unidb.timeindb (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+////            statement = connection.prepareStatement("INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
 ////                    + "(NULL, ?, 'CAR' , NULL, NOW(), NULL, ?, NULL, NULL, 'ENTRY')");
 ////            statement.setString(1, CardNumber);
 ////            statement.setString(2, EntryID);
@@ -330,7 +330,7 @@ public class DataBaseHandler extends Thread {
             String loginPassword = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             String encoded = new sun.misc.BASE64Encoder().encode(loginPassword.getBytes());
 
-            URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
+            URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress1 + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
 
             //**********************
             uc1 = url.openConnection();
@@ -352,7 +352,7 @@ public class DataBaseHandler extends Thread {
 
             try {
                 connection = getConnection(false);
-//            statement = connection.prepareStatement("insert into unidb.timeindb(CardCode, Plate, PIC2, PIC) " + "values(?,?,?,?)");
+//            statement = connection.prepareStatement("insert into vips.dtr(CardCode, Plate, PIC2, PIC) " + "values(?,?,?,?)");
 //            statement.setString(1, "HFJ93230");
 //            statement.setString(2, "ABCDEFG");
 //            statement.setBinaryStream(3, is1, 1024 * 32); //Last Parameter has to be bigger than actual 
@@ -361,7 +361,7 @@ public class DataBaseHandler extends Thread {
             
             
             //WITH CAMERA TO DATABASE
-            String SQL = "INSERT INTO unidb.timeindb (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+            String SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
                     + "(NULL, ?, 'CAR' , '', NOW(), NULL, ?, ?, ?, 'ENTRY')";
                 statement = connection.prepareStatement(SQL);
             if (null != is1 && null != is2) {
@@ -370,19 +370,146 @@ public class DataBaseHandler extends Thread {
                 statement.setBinaryStream(4, is2, 1024 * 128); //Last Parameter has to be bigger than actual 
             }
             if (null == is1 && null != is2) {
-                SQL = "INSERT INTO unidb.timeindb (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+                SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
                     + "(NULL, ?, 'CAR' , '', NOW(), NULL, NULL, ?, ?, 'ENTRY')";
                 statement = connection.prepareStatement(SQL);
                 statement.setBinaryStream(3, is2, 1024 * 128); //Last Parameter has to be bigger than actual 
             }
             if (null != is1 && null == is2) {
-                SQL = "INSERT INTO unidb.timeindb (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+                SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
                     + "(NULL, ?, 'CAR' , '', NOW(), NULL, ?, NULL, ?, 'ENTRY')";
                 statement = connection.prepareStatement(SQL);
                 statement.setBinaryStream(3, is1, 1024 * 128); //Last Parameter has to be bigger than actual 
             }  
             if (null == is1 && null == is2) {
-                SQL = "INSERT INTO unidb.timeindb (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+                SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+                    + "(NULL, ?, 'CAR' , '', NOW(), NULL, ?, NULL, NULL, 'ENTRY')";
+                statement = connection.prepareStatement(SQL);
+            }
+                statement.setString(1, CardNumber);
+                statement.setString(2, EntryID);
+                statement.executeUpdate();
+                connection.close();
+                statement.close();
+                if (null != is1)
+                is1.close();
+                if (null != is2)
+                is2.close();
+                return true;
+            } catch (Exception e) {
+                System.out.println("Exception Finally: - " + e);
+            }
+        }
+        
+        return false;
+    }
+    
+    public void resetVIPEntry(String CardNumber) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection con = DriverManager.getConnection(MainServer_URL, "root", "sa");
+            st = (Statement) con.createStatement();
+            String delstr = "DELETE FROM vips.dtr WHERE PC = '" + CardNumber + "'";
+
+            st.execute(delstr);
+
+            st.close();
+            con.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public boolean writeVIPEntryWithPix(String EntryID, String CardNumber, String trtype, String DateIN) {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        URLConnection uc1 = null;
+        URLConnection uc2 = null;
+        InputStream is1 = null;
+        InputStream is2 = null;
+        javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+                new javax.net.ssl.HostnameVerifier() {
+
+            public boolean verify(String hostname,
+                    javax.net.ssl.SSLSession sslSession) {
+                return hostname.equals(CONSTANTS.CAMipaddress1);
+            }
+        });
+        Authenticator.setDefault(new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(CONSTANTS.CAMusername, CONSTANTS.CAMpassword.toCharArray());
+            }
+        });
+////        try {
+//////            OLD SQL
+////            connection = getConnection(false);
+////            statement = connection.prepareStatement("INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+////                    + "(NULL, ?, 'CAR' , NULL, NOW(), NULL, ?, NULL, NULL, 'ENTRY')");
+////            statement.setString(1, CardNumber);
+////            statement.setString(2, EntryID);
+////            statement.executeUpdate();
+////        } catch (Exception e) {
+////            System.out.println(e.getMessage());
+////            e.printStackTrace();
+////        }
+        
+        try {
+            String loginPassword = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
+            String encoded = new sun.misc.BASE64Encoder().encode(loginPassword.getBytes());
+
+            URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress1 + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
+
+            //**********************
+            uc1 = url.openConnection();
+            uc2 = url.openConnection();
+            String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
+            //String userpass = "root" + ":" + "Th30r3t1cs";
+            String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
+            uc1.setRequestProperty("Authorization", basicAuth);
+            uc2.setRequestProperty("Authorization", basicAuth);
+
+            is1 = (InputStream) uc1.getInputStream();
+            is2 = (InputStream) uc2.getInputStream();
+            
+        } catch (FileNotFoundException e) {
+            System.out.println("FileNotFoundException: - " + e);
+        } catch (Exception e) {
+            System.out.println("Exception: - " + e);
+        } finally {
+
+            try {
+                connection = getConnection(false);
+//            statement = connection.prepareStatement("insert into vips.dtr(CardCode, Plate, PIC2, PIC) " + "values(?,?,?,?)");
+//            statement.setString(1, "HFJ93230");
+//            statement.setString(2, "ABCDEFG");
+//            statement.setBinaryStream(3, is1, 1024 * 32); //Last Parameter has to be bigger than actual 
+//            statement.setBinaryStream(4, is2, 1024 * 32); //Last Parameter has to be bigger than actual 
+//            
+            
+            
+            //WITH CAMERA TO DATABASE
+            String SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+                    + "(NULL, ?, 'CAR' , '', NOW(), NULL, ?, ?, ?, 'ENTRY')";
+                statement = connection.prepareStatement(SQL);
+            if (null != is1 && null != is2) {
+                statement = connection.prepareStatement(SQL);
+                statement.setBinaryStream(3, is1, 1024 * 128); //Last Parameter has to be bigger than actual      
+                statement.setBinaryStream(4, is2, 1024 * 128); //Last Parameter has to be bigger than actual 
+            }
+            if (null == is1 && null != is2) {
+                SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+                    + "(NULL, ?, 'CAR' , '', NOW(), NULL, NULL, ?, ?, 'ENTRY')";
+                statement = connection.prepareStatement(SQL);
+                statement.setBinaryStream(3, is2, 1024 * 128); //Last Parameter has to be bigger than actual 
+            }
+            if (null != is1 && null == is2) {
+                SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+                    + "(NULL, ?, 'CAR' , '', NOW(), NULL, ?, NULL, ?, 'ENTRY')";
+                statement = connection.prepareStatement(SQL);
+                statement.setBinaryStream(3, is1, 1024 * 128); //Last Parameter has to be bigger than actual 
+            }  
+            if (null == is1 && null == is2) {
+                SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
                     + "(NULL, ?, 'CAR' , '', NOW(), NULL, ?, NULL, NULL, 'ENTRY')";
                 statement = connection.prepareStatement(SQL);
             }
@@ -418,7 +545,7 @@ public class DataBaseHandler extends Thread {
 //            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 //            InputStream is = null;
 //            connection = getConnection(false);
-//            statement = connection.prepareStatement("insert into unidb.timeindb(CardCode, Plate, PIC) " + "values(?,?,?)");
+//            statement = connection.prepareStatement("insert into vips.dtr(CardCode, Plate, PIC) " + "values(?,?,?)");
 //            statement.setString(1, "HFJ93230");
 //            statement.setString(2, "ABCDEFG");
 //            statement.setBinaryStream(3, (InputStream) inputStream, (int) (fileimage.length()));
@@ -443,7 +570,7 @@ public class DataBaseHandler extends Thread {
     public void ShowImageFromDB() {
         try {
             connection = getConnection(false);
-            String sql = "SELECT CardCode, Plate, PIC FROM unidb.timeindb";
+            String sql = "SELECT CardCode, Plate, PIC FROM vips.dtr";
             PreparedStatement stmt = connection.prepareStatement(sql);
             ResultSet resultSet = stmt.executeQuery();
 
@@ -682,7 +809,50 @@ public class DataBaseHandler extends Thread {
     public boolean findCGHCard(String cardNumber) throws SQLException, Exception {
         connection = getConnection(false);
         if (null != connection) {
-            ResultSet rs = selectDatabyFields("SELECT CardCode, Timein FROM unidb.timeindb WHERE CardCode='" + cardNumber + "'");
+            ResultSet rs = selectDatabyFields("SELECT CardCode, Timein FROM vips.dtr WHERE CardCode='" + cardNumber + "'");
+            // iterate through the java resultset
+            String CardCode = "";
+            String TimeIn = "";
+            while (rs.next()) {
+                CardCode = rs.getString("CardCode");
+                TimeIn = rs.getString("Timein");
+                System.out.println("TIME IN:" + TimeIn);
+            }
+            st.close();
+            connection.close();
+            if (cardNumber.compareToIgnoreCase(CardCode) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public boolean findCGHVIPCard(String cardNumber) throws SQLException, Exception {
+        connection = getConnection(false);
+        if (null != connection) {
+            ResultSet rs = selectDatabyFields("SELECT * FROM vips.masterlist WHERE cardCode='" + cardNumber + "'");
+            // iterate through the java resultset
+            String CardCode = "";
+            String TimeIn = "";
+            while (rs.next()) {
+                CardCode = rs.getString("CardCode");
+                //TimeIn = rs.getString("Timein");
+                System.out.println("CardCode is :" + CardCode + " TIME IN:" + TimeIn + " CardNumber is: " + cardNumber);
+            }
+            st.close();
+            connection.close();
+            if (cardNumber.compareToIgnoreCase(CardCode) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+    public boolean findVIPinDTR(String cardNumber) throws SQLException, Exception {
+        connection = getConnection(false);
+        if (null != connection) {
+            ResultSet rs = selectDatabyFields("SELECT * FROM vips.dtr WHERE CardCode='" + cardNumber + "'");
             // iterate through the java resultset
             String CardCode = "";
             String TimeIn = "";
@@ -705,7 +875,7 @@ public class DataBaseHandler extends Thread {
      */
     public boolean writeCGHEntry(String EntryID, String CardNumber, String trtype, String DateIN) {
 
-//INSERT INTO `timeindb` (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES
+//INSERT INTO `dtr` (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES
 //(618563, 'E01D2281', 'CAR', 'AAU7363', '2014-12-17 22:02:00', NULL, 'Entry Zone 2', NULL, NULL, 'ENTRY');
         try {
             if (CardNumber.length() > 8) {
@@ -716,11 +886,11 @@ public class DataBaseHandler extends Thread {
                 st = (Statement) connection.createStatement();
                 String isLoststr;
 
-//INSERT INTO `timeindb` (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES
+//INSERT INTO `dtr` (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES
 //(618563, 'E01D2281', 'CAR', 'AAU7363', '2014-12-17 22:02:00', NULL, 'Entry Zone 2', NULL, NULL, 'ENTRY');
-                //String SQL = "INSERT INTO unidb.timeindb (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+                //String SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
                 //        + "(NULL, '" + CardNumber + "', 'CAR' , NULL, '" + DateIN + "', NULL, '" + EntryID + "', NULL, NULL, 'ENTRY')";    
-                String SQL = "INSERT INTO unidb.timeindb (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+                String SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
                         + "(NULL, '" + CardNumber + "', 'CAR' , '', NOW(), NULL, '" + EntryID + "', NULL, NULL, 'ENTRY')";
 
                 st.execute(SQL);
@@ -752,7 +922,7 @@ public class DataBaseHandler extends Thread {
             Class.forName("com.mysql.jdbc.Driver");
             Connection con = DriverManager.getConnection(MainServer_URL, "root", "sa");
             st = (Statement) con.createStatement();
-            String delstr = "DELETE FROM unidb.timeindb WHERE PC = '" + entranceID + "'";
+            String delstr = "DELETE FROM vips.dtr WHERE PC = '" + entranceID + "'";
 
             st.execute(delstr);
 
@@ -1133,11 +1303,11 @@ public class DataBaseHandler extends Thread {
             Class.forName("com.mysql.jdbc.Driver");
             Connection con = DriverManager.getConnection(MainServer_URL, "root", "sa");
             st = (Statement) con.createStatement();
-            String str = "SELECT * FROM unidb.timeindb WHERE CardCode = '" + cardNumber + "'";
+            String str = "SELECT * FROM vips.dtr WHERE CardCode = '" + cardNumber + "'";
 
             ResultSet rs = st.executeQuery(str);
 
-            //INSERT INTO `timeindb` (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES
+            //INSERT INTO `dtr` (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES
 //(618563, 'E01D2281', 'CAR', 'AAU7363', '2014-12-17 22:02:00', NULL, 'Entry Zone 2', NULL, NULL, 'ENTRY');
             while (rs.next()) {
                 int id = rs.getInt("ID");
@@ -1163,10 +1333,10 @@ public class DataBaseHandler extends Thread {
         try {
             connection = getConnection(false);
             st = (Statement) connection.createStatement();
-            //String SQL = "INSERT INTO unidb.timeindb (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+            //String SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
             //       + "(NULL, '" + CardNumber + "', 'CAR' , NULL, NOW(), NULL, '" + EntryID + "', NULL, NULL, 'ENTRY')";    
 
-            st.execute("UPDATE unidb.timeindb SET Timein = NOW(), Plate = '', PC = '" + entryID + "' WHERE CardCode = '" + cardNumber + "'");
+            st.execute("UPDATE vips.dtr SET Timein = NOW(), Plate = '', PC = '" + entryID + "' WHERE CardCode = '" + cardNumber + "'");
 
             st.close();
             connection.close();
@@ -1177,7 +1347,25 @@ public class DataBaseHandler extends Thread {
         }
     }
 
-    public boolean updateEntryRecordWPix(String cardNumber, String entryID) {
+    public boolean deleteVIP_DTR(String cardNumber) {
+        try {
+            connection = getConnection(false);
+            st = (Statement) connection.createStatement();
+            //String SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
+            //       + "(NULL, '" + CardNumber + "', 'CAR' , NULL, NOW(), NULL, '" + EntryID + "', NULL, NULL, 'ENTRY')";    
+
+            st.execute("DELETE FROM vips.dtr WHERE CardCode = '" + cardNumber + "'");
+
+            st.close();
+            connection.close();
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+    
+    public boolean updateVIPEntryRecordWPix(String cardNumber, String entryID) {
         Connection connection = null;
         PreparedStatement statement = null;
         URLConnection uc1 = null;
@@ -1189,7 +1377,7 @@ public class DataBaseHandler extends Thread {
 
             public boolean verify(String hostname,
                     javax.net.ssl.SSLSession sslSession) {
-                return hostname.equals(CONSTANTS.CAMipaddress);
+                return hostname.equals(CONSTANTS.CAMipaddress1);
             }
         });
         Authenticator.setDefault(new Authenticator() {
@@ -1201,7 +1389,7 @@ public class DataBaseHandler extends Thread {
             String loginPassword = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             String encoded = new sun.misc.BASE64Encoder().encode(loginPassword.getBytes());
 
-            URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
+            URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress1 + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
 
             //**********************
             uc1 = url.openConnection();
@@ -1226,29 +1414,118 @@ public class DataBaseHandler extends Thread {
             try {
                 connection = getConnection(false);
             
-            String SQL = "UPDATE unidb.timeindb SET Timein = NOW(), Plate = '', PIC = ? , PIC2 = ? WHERE CardCode = ?";
+            String SQL = "UPDATE vips.dtr SET Timein = NOW(), Plate = '', PIC = ? , PIC2 = ? WHERE CardCode = ?";
             statement = connection.prepareStatement(SQL);
             if (null != is1 && null != is2) {
-                SQL = "UPDATE unidb.timeindb SET Timein = NOW(), Plate = '', PIC = ? , PIC2 = ? WHERE CardCode = ?";
+                SQL = "UPDATE vips.dtr SET Timein = NOW(), Plate = '', PIC = ? , PIC2 = ? WHERE CardCode = ?";
                 statement = connection.prepareStatement(SQL);
                 statement.setBinaryStream(1, is1, 1024 * 128); //Last Parameter has to be bigger than actual 
                 statement.setBinaryStream(2, is2, 1024 * 128); //Last Parameter has to be bigger than actual 
                 statement.setString(3, cardNumber);
             }
             if (null != is1 && null == is2) {
-                SQL = "UPDATE unidb.timeindb SET Timein = NOW(), Plate = '', PIC = ? , PIC2 = NULL WHERE CardCode = ?";
+                SQL = "UPDATE vips.dtr SET Timein = NOW(), Plate = '', PIC = ? , PIC2 = NULL WHERE CardCode = ?";
                 statement = connection.prepareStatement(SQL);
                 statement.setBinaryStream(1, is1, 1024 * 128); //Last Parameter has to be bigger than actual 
                 statement.setString(2, cardNumber);
             }
             if (null == is1 && null != is2) {
-                SQL = "UPDATE unidb.timeindb SET Timein = NOW(), Plate = '', PIC = NULL , PIC2 = ? WHERE CardCode = ?";
+                SQL = "UPDATE vips.dtr SET Timein = NOW(), Plate = '', PIC = NULL , PIC2 = ? WHERE CardCode = ?";
                 statement = connection.prepareStatement(SQL);
                 statement.setBinaryStream(2, is2, 1024 * 128); //Last Parameter has to be bigger than actual 
                 statement.setString(2, cardNumber);
             }
             if (null == is1 && null == is2) {
-                SQL = "UPDATE unidb.timeindb SET Timein = NOW(), Plate = '', PIC = NULL , PIC2 = NULL WHERE CardCode = ?";
+                SQL = "UPDATE vips.dtr SET Timein = NOW(), Plate = '', PIC = NULL , PIC2 = NULL WHERE CardCode = ?";
+                statement = connection.prepareStatement(SQL);
+                statement.setString(1, cardNumber);
+            }                                  
+            statement.executeUpdate();
+                connection.close();
+                statement.close();
+                if (null!= is1)
+                is1.close();
+                if (null!= is2)
+                is2.close();
+                return true;
+            } catch (Exception e) {
+                System.out.println("Exception Finally: - " + e);
+            }
+        return false;        
+    }
+
+    public boolean updateEntryRecordWPix(String cardNumber, String entryID) {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        URLConnection uc1 = null;
+        URLConnection uc2 = null;
+        InputStream is1 = null;
+        InputStream is2 = null;
+        javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+                new javax.net.ssl.HostnameVerifier() {
+
+            public boolean verify(String hostname,
+                    javax.net.ssl.SSLSession sslSession) {
+                return hostname.equals(CONSTANTS.CAMipaddress1);
+            }
+        });
+        Authenticator.setDefault(new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(CONSTANTS.CAMusername, CONSTANTS.CAMpassword.toCharArray());
+            }
+        });
+        try {
+            String loginPassword = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
+            String encoded = new sun.misc.BASE64Encoder().encode(loginPassword.getBytes());
+
+            URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress1 + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
+
+            //**********************
+            uc1 = url.openConnection();
+            uc2 = url.openConnection();
+            String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
+            //String userpass = "root" + ":" + "Th30r3t1cs";
+            String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
+            uc1.setRequestProperty("Authorization", basicAuth);
+            uc2.setRequestProperty("Authorization", basicAuth);
+
+            is1 = (InputStream) uc1.getInputStream();
+            is2 = (InputStream) uc2.getInputStream();
+            
+        } catch (FileNotFoundException e) {
+            System.out.println("FileNotFoundException: - " + e);
+        } catch (Exception e) {
+            System.out.println("Exception: - " + e);
+        } finally {
+
+        }
+        
+            try {
+                connection = getConnection(false);
+            
+            String SQL = "UPDATE vips.dtr SET Timein = NOW(), Plate = '', PIC = ? , PIC2 = ? WHERE CardCode = ?";
+            statement = connection.prepareStatement(SQL);
+            if (null != is1 && null != is2) {
+                SQL = "UPDATE vips.dtr SET Timein = NOW(), Plate = '', PIC = ? , PIC2 = ? WHERE CardCode = ?";
+                statement = connection.prepareStatement(SQL);
+                statement.setBinaryStream(1, is1, 1024 * 128); //Last Parameter has to be bigger than actual 
+                statement.setBinaryStream(2, is2, 1024 * 128); //Last Parameter has to be bigger than actual 
+                statement.setString(3, cardNumber);
+            }
+            if (null != is1 && null == is2) {
+                SQL = "UPDATE vips.dtr SET Timein = NOW(), Plate = '', PIC = ? , PIC2 = NULL WHERE CardCode = ?";
+                statement = connection.prepareStatement(SQL);
+                statement.setBinaryStream(1, is1, 1024 * 128); //Last Parameter has to be bigger than actual 
+                statement.setString(2, cardNumber);
+            }
+            if (null == is1 && null != is2) {
+                SQL = "UPDATE vips.dtr SET Timein = NOW(), Plate = '', PIC = NULL , PIC2 = ? WHERE CardCode = ?";
+                statement = connection.prepareStatement(SQL);
+                statement.setBinaryStream(2, is2, 1024 * 128); //Last Parameter has to be bigger than actual 
+                statement.setString(2, cardNumber);
+            }
+            if (null == is1 && null == is2) {
+                SQL = "UPDATE vips.dtr SET Timein = NOW(), Plate = '', PIC = NULL , PIC2 = NULL WHERE CardCode = ?";
                 statement = connection.prepareStatement(SQL);
                 statement.setString(1, cardNumber);
             }                                  
@@ -1271,11 +1548,11 @@ public class DataBaseHandler extends Thread {
             Class.forName("com.mysql.jdbc.Driver");
             Connection con = DriverManager.getConnection(MainServer_URL, "root", "sa");
             st = (Statement) con.createStatement();
-            String str = "SELECT * FROM unidb.timeindb WHERE PC = '" + PC + "'";
+            String str = "SELECT * FROM vips.dtr WHERE PC = '" + PC + "'";
 
             ResultSet rs = st.executeQuery(str);
 
-            //INSERT INTO `timeindb` (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES
+            //INSERT INTO `dtr` (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES
 //(618563, 'E01D2281', 'CAR', 'AAU7363', '2014-12-17 22:02:00', NULL, 'Entry Zone 2', NULL, NULL, 'ENTRY');
             while (rs.next()) {
                 int id = rs.getInt("ID");

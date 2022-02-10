@@ -29,6 +29,7 @@ public class NetworkClock implements Runnable {
 
             try {
                 while (true) {
+                    String serverTime = "";
                     SystemStatus ss = new SystemStatus();
                     boolean online = ss.checkPING(CONSTANTS.serverIP);//LINUX USE ONLY - also check your root password
                     if (cards.isEmpty() == false) {
@@ -38,20 +39,20 @@ public class NetworkClock implements Runnable {
                             System.out.print("`/");
                             
                             //SAVE Card to DATABASE
-                            boolean isValid = false;
+                            boolean isInserted = false;
                             boolean isUpdated = false;
-                            String serverTime = dbh.getServerTime();
+                            serverTime = dbh.getServerTime();
                             System.out.println("Time On Card*" + cardFromReader + "* :: " + serverTime);
-                            boolean alreadyExists = dbh.findCGHCard(cardFromReader);
-                            if (alreadyExists) {
-                                isUpdated = dbh.updateEntryRecordWPix(cardFromReader, CONSTANTS.entranceID);
+                            boolean isRecordedVIP = dbh.deleteVIP_DTR(cardFromReader);
+                            if (isRecordedVIP) {
+                                //isUpdated = dbh.updateVIPEntryRecordWPix(cardFromReader, CONSTANTS.entranceID);
                                 System.out.println(cardFromReader + "isUpdated" + isUpdated);
                                 System.out.println(cardFromReader + "isUpdated" + isUpdated);
                                 cards.remove(0);
                             } else {
-                                isValid = dbh.writeCGHEntryWithPix(CONSTANTS.entranceID, cardFromReader, "R", "");
-                                System.out.println(cardFromReader + " isValid:" + isValid);
-                                System.out.println(cardFromReader + " isValid:" + isValid);
+                                isInserted = dbh.writeVIPEntryWithPix(CONSTANTS.entranceID, cardFromReader, "V", "");
+                                System.out.println(cardFromReader + " isInserted:" + isInserted);
+                                System.out.println(cardFromReader + " isInserted:" + isInserted);
                                 cards.remove(0);
                             }
 
@@ -60,7 +61,7 @@ public class NetworkClock implements Runnable {
                             System.out.print("-");
                         }
                         Thread.sleep(100);
-                        System.out.println("NETWORK");
+                        ss.updateTimeOnChip(serverTime);
                         //resetAdmin();
                         //Thread.sleep(2000);
                     }

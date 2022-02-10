@@ -17,41 +17,50 @@ import com.pi4j.system.SystemInfo;
 import com.pi4j.wiringpi.Gpio;
 import com.theoretics.Convert;
 import com.theoretics.DateConversionHandler;
+import com.theoretics.NetworkClock;
 import com.theoretics.RaspRC522;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.Socket;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Scanner;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import java.util.Scanner;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+//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
 public class MainStart {
 
     String version = "v.3.0.2";
-    String entranceID = "VIP EXIT CARD READER 1";
+    String entranceID = "VIP Exit ";
 
     String cardFromReader = "";
 
     ArrayList<String> cards;
+    private static Logger log = LogManager.getLogger(MainStart.class.getName());
     DateConversionHandler dch = new DateConversionHandler();
     private Thread ThrNetworkClock;
-//    final GpioPinDigitalOutput pin1;
+    private Thread ThrReaderClock;
 
     AudioInputStream welcomeAudioIn = null;
     AudioInputStream thankyouAudioIn = null;
     AudioInputStream pleasewaitAudioIn = null;
     AudioInputStream errorAudioIn = null;
     AudioInputStream beepAudioIn = null;
-    AudioInputStream cartoonCardAudioIn = null;
+    AudioInputStream takeCardAudioIn = null;
     AudioInputStream bgAudioIn = null;
     Clip welcomeClip = null;
     Clip pleaseWaitClip = null;
     Clip thankyouClip = null;
     Clip beepClip = null;
-    Clip cartoonCardClip = null;
+    Clip takeCardClip = null;
     Clip errorClip = null;
     Clip bgClip = null;
 
@@ -60,272 +69,41 @@ public class MainStart {
 
     final GpioController gpio = GpioFactory.getInstance();
 
-    final GpioPinDigitalOutput relayBarrier = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_05, "BARRIER", PinState.LOW);
-    //final GpioPinDigitalOutput relayBarrier = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_09, "BARRIER", PinState.LOW);
+    //NOTE: Do not use GPIO 30-SDA0, 12-MOSI, 13-MISO, 14-DOES NOT WORK
+    final GpioPinDigitalOutput led1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "GREENLED", PinState.HIGH);
+    final GpioPinDigitalOutput led2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "BLUELED", PinState.HIGH);
+    final GpioPinDigitalOutput led3 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "REDLED", PinState.HIGH);
 
-    public void showInfo() {
-        // display a few of the available system information properties
-        System.out.println("----------------------------------------------------");
-        System.out.println("PLATFORM INFO");
-        System.out.println("----------------------------------------------------");
-        try {
-            System.out.println("Platform Name     :  " + PlatformManager.getPlatform().getLabel());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Platform ID       :  " + PlatformManager.getPlatform().getId());
-        } catch (Exception ex) {
-        }
-        System.out.println("----------------------------------------------------");
-        System.out.println("HARDWARE INFO");
-        System.out.println("----------------------------------------------------");
-        try {
-            System.out.println("Serial Number     :  " + SystemInfo.getSerial());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("CPU Revision      :  " + SystemInfo.getCpuRevision());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("CPU Architecture  :  " + SystemInfo.getCpuArchitecture());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("CPU Part          :  " + SystemInfo.getCpuPart());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("CPU Temperature   :  " + SystemInfo.getCpuTemperature());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("CPU Core Voltage  :  " + SystemInfo.getCpuVoltage());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("CPU Model Name    :  " + SystemInfo.getModelName());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Processor         :  " + SystemInfo.getProcessor());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Hardware          :  " + SystemInfo.getHardware());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Hardware Revision :  " + SystemInfo.getRevision());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Is Hard Float ABI :  " + SystemInfo.isHardFloatAbi());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Board Type        :  " + SystemInfo.getBoardType().name());
-        } catch (Exception ex) {
-        }
+    final GpioPinDigitalInput btnPower = gpio.provisionDigitalInputPin(RaspiPin.GPIO_04, PinPullResistance.PULL_UP);
+    final GpioPinDigitalInput btnReset = gpio.provisionDigitalInputPin(RaspiPin.GPIO_20, PinPullResistance.PULL_UP);
+    final GpioPinDigitalInput btnDispense = gpio.provisionDigitalInputPin(RaspiPin.GPIO_28, PinPullResistance.PULL_UP);
 
-        System.out.println("----------------------------------------------------");
-        System.out.println("MEMORY INFO");
-        System.out.println("----------------------------------------------------");
-        try {
-            System.out.println("Total Memory      :  " + SystemInfo.getMemoryTotal());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Used Memory       :  " + SystemInfo.getMemoryUsed());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Free Memory       :  " + SystemInfo.getMemoryFree());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Shared Memory     :  " + SystemInfo.getMemoryShared());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Memory Buffers    :  " + SystemInfo.getMemoryBuffers());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Cached Memory     :  " + SystemInfo.getMemoryCached());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("SDRAM_C Voltage   :  " + SystemInfo.getMemoryVoltageSDRam_C());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("SDRAM_I Voltage   :  " + SystemInfo.getMemoryVoltageSDRam_I());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("SDRAM_P Voltage   :  " + SystemInfo.getMemoryVoltageSDRam_P());
-        } catch (Exception ex) {
-        }
+    final GpioPinDigitalInput carDetected = gpio.provisionDigitalInputPin(RaspiPin.GPIO_29, PinPullResistance.PULL_UP);
 
-        System.out.println("----------------------------------------------------");
-        System.out.println("OPERATING SYSTEM INFO");
-        System.out.println("----------------------------------------------------");
-        try {
-            System.out.println("OS Name           :  " + SystemInfo.getOsName());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("OS Version        :  " + SystemInfo.getOsVersion());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("OS Architecture   :  " + SystemInfo.getOsArch());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("OS Firmware Build :  " + SystemInfo.getOsFirmwareBuild());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("OS Firmware Date  :  " + SystemInfo.getOsFirmwareDate());
-        } catch (Exception ex) {
-        }
+    final GpioPinDigitalOutput relayBarrier = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_09, "BARRIER", PinState.HIGH);
 
-        System.out.println("----------------------------------------------------");
-        System.out.println("JAVA ENVIRONMENT INFO");
-        System.out.println("----------------------------------------------------");
-        System.out.println("Java Vendor       :  " + SystemInfo.getJavaVendor());
-        System.out.println("Java Vendor URL   :  " + SystemInfo.getJavaVendorUrl());
-        System.out.println("Java Version      :  " + SystemInfo.getJavaVersion());
-        System.out.println("Java VM           :  " + SystemInfo.getJavaVirtualMachine());
-        System.out.println("Java Runtime      :  " + SystemInfo.getJavaRuntime());
-
-        System.out.println("----------------------------------------------------");
-        System.out.println("NETWORK INFO");
-        System.out.println("----------------------------------------------------");
-
-        try {
-            // display some of the network information
-            System.out.println("Hostname          :  " + NetworkInfo.getHostname());
-        } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            for (String ipAddress : NetworkInfo.getIPAddresses()) {
-                System.out.println("IP Addresses      :  " + ipAddress);
-            }
-        } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            for (String fqdn : NetworkInfo.getFQDNs()) {
-                System.out.println("FQDN              :  " + fqdn);
-            }
-        } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            for (String nameserver : NetworkInfo.getNameservers()) {
-                System.out.println("Nameserver        :  " + nameserver);
-            }
-        } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        System.out.println("----------------------------------------------------");
-        System.out.println("CODEC INFO");
-        System.out.println("----------------------------------------------------");
-        try {
-            System.out.println("H264 Codec Enabled:  " + SystemInfo.getCodecH264Enabled());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("MPG2 Codec Enabled:  " + SystemInfo.getCodecMPG2Enabled());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("WVC1 Codec Enabled:  " + SystemInfo.getCodecWVC1Enabled());
-        } catch (Exception ex) {
-        }
-
-        System.out.println("----------------------------------------------------");
-        System.out.println("CLOCK INFO");
-        System.out.println("----------------------------------------------------");
-        try {
-            System.out.println("ARM Frequency     :  " + SystemInfo.getClockFrequencyArm());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("CORE Frequency    :  " + SystemInfo.getClockFrequencyCore());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("H264 Frequency    :  " + SystemInfo.getClockFrequencyH264());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("ISP Frequency     :  " + SystemInfo.getClockFrequencyISP());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("V3D Frequency     :  " + SystemInfo.getClockFrequencyV3D());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("UART Frequency    :  " + SystemInfo.getClockFrequencyUART());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("PWM Frequency     :  " + SystemInfo.getClockFrequencyPWM());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("EMMC Frequency    :  " + SystemInfo.getClockFrequencyEMMC());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("Pixel Frequency   :  " + SystemInfo.getClockFrequencyPixel());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("VEC Frequency     :  " + SystemInfo.getClockFrequencyVEC());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("HDMI Frequency    :  " + SystemInfo.getClockFrequencyHDMI());
-        } catch (Exception ex) {
-        }
-        try {
-            System.out.println("DPI Frequency     :  " + SystemInfo.getClockFrequencyDPI());
-        } catch (Exception ex) {
-        }
-
-        System.out.println();
-        System.out.println();
-        System.out.println("Exiting SystemInfoExample");
-    }
-
-    public void NewstartProgram() { //BACKUP 08202020
-        System.out.println(entranceID + " Tap Card Listener " + version);
+    public void startProgram() {
+        System.out.println(entranceID + " Standalone Listener " + version);
 //        System.out.println(entranceID + " Tap Card Listener " + version);
+
+//        Gson gson = new Gson();
+//
+//        String json = "{\"brand\":\"Jeep\", \"doors\": 3}";
+//
+//        VIPs car = gson.fromJson(json, VIPs.class);
+//        
+//        System.out.println(car.brand +"["+ car.doors + "]");
         try {
-            welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/welcome.wav"));
+            //welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/welcome2stmichael.wav"));
+            //welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/mrdh.wav"));
+            welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/welcome2cgh.wav"));
             welcomeClip = AudioSystem.getClip();
             welcomeClip.open(welcomeAudioIn);
         } catch (Exception ex) {
             notifyError(ex);
         }
         try {
-            pleasewaitAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/plswait.wav"));
+            pleasewaitAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/pleasewaitgb.wav"));
             pleaseWaitClip = AudioSystem.getClip();
             pleaseWaitClip.open(pleasewaitAudioIn);
         } catch (Exception ex) {
@@ -346,9 +124,9 @@ public class MainStart {
             System.out.println(ex.getMessage());
         }
         try {
-            cartoonCardAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/cartoon.wav"));
-            cartoonCardClip = AudioSystem.getClip();
-            cartoonCardClip.open(cartoonCardAudioIn);
+            takeCardAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/takecard.wav"));
+            takeCardClip = AudioSystem.getClip();
+            takeCardClip.open(takeCardAudioIn);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
@@ -379,48 +157,114 @@ public class MainStart {
         }
 
         this.cards = new ArrayList<String>();
-        Scanner scan = new Scanner(System.in);
+
+        NetworkClock nc = new NetworkClock(this.cards);
+        ThrNetworkClock = new Thread(nc);
+        ThrNetworkClock.start();
+//        ReaderClock rc = new ReaderClock(this.cards);
+//        ThrReaderClock = new Thread(rc);
+//        ThrReaderClock.start();
+        //Old RC522 Reader
+        //RaspRC522 rc522 = new RaspRC522();
+        //rc522.RC522_Init();
+        //New Black READER
+        Scanner scan = null;
 
         String text = null;
         String cardUID = null;
+
         System.out.println("Reader Ready!");
-//        transistorDispense.pulse(1000, true);
+        //Testing Dispenser
+//        transistorDispense.pulse(2000, true);
 //        Gpio.delay(2000);
-//        transistorReject.pulse(1000, true);
+        /*
+        transistorDispense.setState(false);
+        Gpio.delay(1000);
+        transistorDispense.setState(true);
+        Gpio.delay(1000);
+        transistorDispense.setState(false);
+        Gpio.delay(1000);
+         */
+ /*
+        transistorReject.setState(false);
+        Gpio.delay(1000);
+        transistorReject.setState(true);
+        Gpio.delay(1000);
+        transistorReject.setState(false);
+        Gpio.delay(1000);
+         */
+//
+//        //Testing Barrier Relay
+//        relayBarrier.setState(false);
+//        Gpio.delay(2000);
+//        relayBarrier.setState(true);
+//        Gpio.delay(2000);
+//        relayLights.setState(false);
+//        Gpio.delay(2000);
+//        relayLights.setState(true);
+//        Gpio.delay(2000);
+//        relayFan.setState(false);
+//        Gpio.delay(2000);
+//        relayFan.setState(true);
+        System.out.println("Relays Ready!");
+//        
+
+//        Gpio.delay(2000);
+//        relayFan.setState(false);
+//        Gpio.delay(2000);
+//        relayFan.setState(true);
+//        Gpio.delay(2000);
+//        relayLights.setState(false);
+//        Gpio.delay(2000);
+//        relayLights.setState(true);        
+//        System.out.print("RELAYS Tested!");
         //Testing Remotely
-//        cards.add("ABC1234");
+        cards.add("ABCDE12");
+        System.out.println("Testing vip masterlist == " + checkVIP_MasterList("0285656A"));
+        System.out.println("Testing vip masterlist == " + checkVIP_MasterList("62445A6A"));
+        Date now = new Date();
+        try {
+            comms2POS("EXITVIP,WAS RESET," + now.toString() + ", ");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         while (true) {
-//            
-            Date now = new Date();
-            //System.out.println("Hour :  " + now.getHours());
-            if (now.getHours() >= 18) {
-                //relayLights.low();
-            }
+            System.out.print("!reader is good!");
+
+//            try {
+//                comms2POS("EXITVIP,CDF07701, , ");
+//            } catch (Exception ex) {
+//                ex.printStackTrace();
+//            }
+            strUID = "";
             try {
-                if (SystemInfo.getCpuTemperature() >= 45) {
-                    System.out.println("CPU Temperature   :  " + SystemInfo.getCpuTemperature());
-                    //relayFan.low();
-                } else {
-                    //relayFan.high();
+                scan = new Scanner(System.in);
+                if (scan.hasNextLong()) {
+                    text = scan.nextLine();
                 }
             } catch (Exception ex) {
             }
-            //System.out.print("!");
-//                relayBarrier.low(); //RELAY ON
-//                        System.out.println("Barrier Open!");
-//                        try {
-//                            Thread.sleep(500);
-//                            relayBarrier.high();
-//                            Thread.sleep(1500);
-//                        } catch (InterruptedException ex) {
-//                            Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-//                        }
-            strUID = "";
-            text = scan.nextLine();
             if (null != text) {
                 try {
                     System.out.println("RAW: " + text);
+                    //cardUID = Long.toHexString(Long.parseLong(text));
                     cardUID = Long.toHexString(Long.parseLong(text));
+                    if (cardUID.length() == 7) {
+                        cardUID = "0" + cardUID;
+                    } else if (cardUID.length() == 6) {
+                        cardUID = "00" + cardUID;
+                    } else if (cardUID.length() == 5) {
+                        cardUID = "000" + cardUID;
+                    } else if (cardUID.length() == 4) {
+                        cardUID = "0000" + cardUID;
+                    } else if (cardUID.length() == 3) {
+                        cardUID = "00000" + cardUID;
+                    } else if (cardUID.length() == 2) {
+                        cardUID = "000000" + cardUID;
+                    }
+                    //0892609774
+                    System.out.println("RAW CARDUID: " + cardUID);
+                    /*
                     if (text.startsWith("0")) {
                         cardUID = "0" + cardUID;
                     } else if (text.startsWith("00")) {
@@ -429,188 +273,117 @@ public class MainStart {
                         cardUID = "000" + cardUID;
                     } else if (text.startsWith("0000")) {
                         cardUID = "0000" + cardUID;
+                    } else if (text.startsWith("00000")) {
+                        cardUID = "00000" + cardUID;
+                    } else if (text.startsWith("000000")) {
+                        cardUID = "000000" + cardUID;
                     }
+                     */
                     //cardUID = Integer.toHexString(Integer.parseInt(text));
                     cardUID = cardUID.toUpperCase();
+
+                    strUID = cardUID.substring(6, 8) + cardUID.substring(4, 6) + cardUID.substring(2, 4) + cardUID.substring(0, 2);
+
                     System.out.println("UID: " + cardUID.substring(6, 8) + cardUID.substring(4, 6) + cardUID.substring(2, 4) + cardUID.substring(0, 2));
                 } catch (Exception ex) {
                     System.err.println("Card Conversion: " + ex);
                 }
-                strUID = cardUID.substring(6, 8) + cardUID.substring(4, 6) + cardUID.substring(2, 4) + cardUID.substring(0, 2);
                 //System.out.println("" + stats);
-                if (prevUID.compareToIgnoreCase(strUID) != 0) {
-                    //Uncomment Below to disable Read same Card
-                    //prevUID = strUID;
 
-                    System.out.println("Card Read UID:" + strUID.substring(0, 8));
-                    cardFromReader = strUID.substring(0, 8).toUpperCase();
-                    DataBaseHandler dbh = new DataBaseHandler();
-                    String cardHolder = dbh.findVIPcard(cardFromReader);
-                    if (cardHolder.compareTo("") != 0) {
+                try {
+                    if (prevUID.compareToIgnoreCase(strUID) != 0) {
+                        //Uncomment Below to disable Read same Card
+//                        prevUID = strUID;
 
-                        relayBarrier.low(); //RELAY ON
-                        System.out.println("Barrier Open!");
-                        try {
-                            dbh.deleteVIP(cardFromReader);
-                            dbh.exitVIP(cardFromReader);
-                        } catch (Exception ex) {
-                            Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        try {
-                            Thread.sleep(500);
-                            relayBarrier.high();
-                            Thread.sleep(1500);
-                            dbh.sendMessage(0, " Thank you " + cardHolder + "!", "VIP Exit", "EX01");
-                        } catch (Exception ex) {
-                            Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        if (dbh.exitVIP(cardFromReader)) {
-                            dbh.sendMessage(0, "VIP Card" + cardFromReader + " successful Exit", "VIP Exit", "EX01");
-                        } else {
-                            if (dbh.exitVIP(cardFromReader)) {
-                                dbh.sendMessage(0, "VIP Card" + cardFromReader + " successful Exit", "VIP Exit", "EX01");
-                            } else {
-                                dbh.sendMessage(0, " Please try to exit " + cardFromReader + " again", "VIP Exit", "EX01");
-                            }
-                        }
-
-                    } else if (cardFromReader.compareToIgnoreCase("3B40CB73") == 0) {
-                        relayBarrier.low(); //RELAY ON
-                        System.out.println("MASTER KEY == Barrier Open!");
-                        try {
-                            Thread.sleep(500);
-                            relayBarrier.high();
-                            Thread.sleep(1500);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
+                        System.out.println("Card Read UID:" + strUID.substring(0, 8));
+                        cardFromReader = strUID.substring(0, 8).toUpperCase();
 //
-//                    if (cardFromReader.compareToIgnoreCase("") != 0) {
-//                        cards.add(cardFromReader);
-//                        
+                        if (cardFromReader.compareToIgnoreCase("") != 0) {
+                            if (checkVIP_MasterList(cardFromReader)) {
+                                relayBarrier.setState(false);
+                                led1.low();
+                                led2.high();
+                                led3.high();
+                                Gpio.delay(2000);
+                                relayBarrier.setState(true);
+                                Gpio.delay(2000);
+                                led1.high();
+                                led2.high();
+                                led3.high();
+                                try {
+                                    comms2POS("EXITVIP,card number:" + cardFromReader + "," + now.toString() + ", Doctor");
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                }
+                            } else {
+                                led1.high();
+                                led2.high();
+                                led3.low();
+                                Gpio.delay(2000);
+                                led1.high();
+                                led2.high();
+                                led3.high();
+                            }
+//
 //                        //byte[] buffer2 = {0x2E};
 //                        //comPort.writeBytes(buffer2, 1);
-//                    }
+                        }
 
-                    // turn on gpio pin1 #01 for 1 second and then off
-                    //System.out.println("--> GPIO state should be: ON for only 3 second");
-                    // set second argument to 'true' use a blocking call
+                        //led1.pulse(1250, true);
+                        System.out.println("LED Open!");
+                        //led2.pulse(1250, true);
+
+                        // turn on gpio pin1 #01 for 1 second and then off
+                        //System.out.println("--> GPIO state should be: ON for only 3 second");
+                        // set second argument to 'true' use a blocking call
 //                    c.showWelcome(700, false);
+                    }
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
             }
-//            try {
-//                Thread.sleep(500);                
-//            } catch (InterruptedException ex) {
-//                Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-        }
+//            strUID = null;
+//
 
-    }
-
-//Still Uses Old Reader    
-    public void startProgram() {
-        System.out.println(entranceID + " Tap Card Listener " + version);
-//        System.out.println(entranceID + " Tap Card Listener " + version);
-        try {
-            welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/welcome.wav"));
-            welcomeClip = AudioSystem.getClip();
-            welcomeClip.open(welcomeAudioIn);
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-        try {
-            pleasewaitAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/plswait.wav"));
-            pleaseWaitClip = AudioSystem.getClip();
-            pleaseWaitClip.open(pleasewaitAudioIn);
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-        try {
-            thankyouAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/thankyou.wav"));
-            thankyouClip = AudioSystem.getClip();
-            thankyouClip.open(thankyouAudioIn);
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-        try {
-            beepAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/beep.wav"));
-            beepClip = AudioSystem.getClip();
-            beepClip.open(beepAudioIn);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        try {
-            cartoonCardAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/cartoon.wav"));
-            cartoonCardClip = AudioSystem.getClip();
-            cartoonCardClip.open(cartoonCardAudioIn);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        try {
-            errorAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/beep.wav"));
-            errorClip = AudioSystem.getClip();
-            errorClip.open(errorAudioIn);
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-
-        try {
-            bgAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/bgmusic.wav"));
-            bgClip = AudioSystem.getClip();
-            bgClip.open(bgAudioIn);
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-
-        try {
-            if (welcomeClip.isActive() == false) {
-                welcomeClip.setFramePosition(0);
-                welcomeClip.start();
-                System.out.println("Welcome Message OK");
-            }
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-
-        this.cards = new ArrayList<String>();
-
-        //RaspRC522 rc522 = new RaspRC522();
-        int back_bits[] = new int[1];
-
-        byte tagid[] = new byte[5];
-        int i, status;
-        byte blockaddress = 8;  //读写块地址0-63
-        byte sector = 15, block = 2;
-
-//        NetworkClock nc = new NetworkClock(this.cards);
-//        ThrNetworkClock = new Thread(nc);
-//        ThrNetworkClock.start();
-        RaspRC522 rc522 = new RaspRC522();
-        rc522.RC522_Init();
-        System.out.println("Reader Ready!");
-//        transistorDispense.pulse(1000, true);
-//        Gpio.delay(2000);
-//        transistorReject.pulse(1000, true);
-        //Testing Remotely
-//        cards.add("ABC1234");
-        while (true) {
-//            
-            Date now = new Date();
+//            transistorDispense.pulse(500, true);
+//        transistorReject.pulse(500, true);
+//        System.out.println("Test Dispense");
             //System.out.println("Hour :  " + now.getHours());
             if (now.getHours() >= 18) {
                 //relayLights.low();
             }
             try {
-                if (SystemInfo.getCpuTemperature() >= 45) {
+                if (SystemInfo.getCpuTemperature() >= 65) {
                     System.out.println("CPU Temperature   :  " + SystemInfo.getCpuTemperature());
-                    //relayFan.low();
+//                    relayFan.low();
+//                    relayBarrier.low();
+//                    transistorDispense.pulse(500, true);
                 } else {
-                    //relayFan.high();
+//                    relayFan.high();
+//                    relayBarrier.high();
                 }
             } catch (Exception ex) {
             }
 
+//            if (null != strUID) {
+//                if (strUID.compareTo("") == 0) {
+//                    transistorDispense.pulse(500, true);
+//                }
+//            } else {
+//                transistorDispense.pulse(500, true);
+//            }
+//            if (led1.isLow()) {
+//                led1.high();
+//            }
+            System.out.println("EOL");
+        }
+
+        /**
+         * Old Version RC522 Reader
+         */
+        /*
+        while (true) {            
             rc522.Reader_Init();
             //System.out.print("!");
             int stats = 0;
@@ -621,58 +394,21 @@ public class MainStart {
                 strUID = Convert.bytesToHex(tagid);
                 if (prevUID.compareToIgnoreCase(strUID) != 0) {
                     //Uncomment Below to disable Read same Card
-                    //prevUID = strUID;
+                    prevUID = strUID;
 
                     System.out.println("Card Read UID:" + strUID.substring(0, 8));
                     cardFromReader = strUID.substring(0, 8).toUpperCase();
-                    DataBaseHandler dbh = new DataBaseHandler();
-                    String cardHolder = dbh.findVIPcard(cardFromReader);
-                    if (cardHolder.compareTo("") != 0) {
-
-                        relayBarrier.low(); //RELAY ON
-                        System.out.println("Barrier Open!");
-                        try {
-                            dbh.deleteVIP(cardFromReader);
-                            dbh.exitVIP(cardFromReader);
-                        } catch (Exception ex) {
-                            Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        try {
-                            Thread.sleep(500);
-                            relayBarrier.high();
-                            Thread.sleep(1500);
-                            dbh.sendMessage(0, " Thank you " + cardHolder + "!", "VIP Exit", "EX01");
-                        } catch (Exception ex) {
-                            Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        if (dbh.exitVIP(cardFromReader)) {
-                            dbh.sendMessage(0, "VIP Card" + cardFromReader + " successful Exit", "VIP Exit", "EX01");
-                        } else {
-                            if (dbh.exitVIP(cardFromReader)) {
-                                dbh.sendMessage(0, "VIP Card" + cardFromReader + " successful Exit", "VIP Exit", "EX01");
-                            } else {
-                                dbh.sendMessage(0, " Please try to exit " + cardFromReader + " again", "VIP Exit", "EX01");
-                            }
-                        }
-
-                    } else if (cardFromReader.compareToIgnoreCase("3B40CB73") == 0) {
-                        relayBarrier.low(); //RELAY ON
-                        System.out.println("MASTER KEY == Barrier Open!");
-                        try {
-                            Thread.sleep(500);
-                            relayBarrier.high();
-                            Thread.sleep(1500);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
 //
-//                    if (cardFromReader.compareToIgnoreCase("") != 0) {
-//                        cards.add(cardFromReader);
-//                        
+                    if (cardFromReader.compareToIgnoreCase("") != 0) {
+                        cards.add(cardFromReader);
+//
 //                        //byte[] buffer2 = {0x2E};
 //                        //comPort.writeBytes(buffer2, 1);
-//                    }
+                    }
+
+                    //led1.pulse(1250, true);
+                    System.out.println("LED Open!");
+                    //led2.pulse(1250, true);
 
                     // turn on gpio pin1 #01 for 1 second and then off
                     //System.out.println("--> GPIO state should be: ON for only 3 second");
@@ -683,14 +419,49 @@ public class MainStart {
             rc522.Stop_Crypto();
             rc522.AntennaOff();
 //            strUID = null;
+//
+            Date now = new Date();
+//            transistorDispense.pulse(500, true);
+//        transistorReject.pulse(500, true);
+//        System.out.println("Test Dispense");
+            //System.out.println("Hour :  " + now.getHours());
+            if (now.getHours() >= 18) {
+                //relayLights.low();
+            }
             try {
-                //Thread.sleep(500);
-                Thread.sleep(1200);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+                if (SystemInfo.getCpuTemperature() >= 65) {
+                    System.out.println("CPU Temperature   :  " + SystemInfo.getCpuTemperature());
+//                    relayFan.low();
+//                    relayBarrier.low();
+//                    transistorDispense.pulse(500, true);
+                } else {
+//                    relayFan.high();
+//                    relayBarrier.high();
+                }
+            } catch (Exception ex) {
+            }
+
+//            if (null != strUID) {
+//                if (strUID.compareTo("") == 0) {
+//                    transistorDispense.pulse(500, true);
+//                }
+//            } else {
+//                transistorDispense.pulse(500, true);
+//            }
+            if (led1.isLow()) {
+                led1.high();
+            }
+            
+            try {
+                Thread.sleep(500);
+//                rc522 = null;
+//                Thread.sleep(3200);
+//                Thread.yield();
+              } catch (Exception ex) {
+                System.out.println(ex.getMessage());
             }
         }
-
+         */
     }
 
     private void notifyError(Exception ex) {
@@ -816,9 +587,188 @@ public class MainStart {
     }
 
     public void setupLED() {
-        System.out.println("Testing Relay!");
+        System.out.println("Setting Up GPIO!");
+        if (Gpio.wiringPiSetup() == -1) {
+            System.out.println(" ==>> GPIO SETUP FAILED");
+            return;
+        }
+
+        led1.setShutdownOptions(true, PinState.HIGH);
+        led2.setShutdownOptions(true, PinState.HIGH);
+        led3.setShutdownOptions(true, PinState.HIGH);
+
         relayBarrier.high();
+
         relayBarrier.setShutdownOptions(true, PinState.LOW);
+//        relayFan.setShutdownOptions(true, PinState.LOW);
+//        relayLights.setShutdownOptions(true, PinState.LOW);
+        btnDispense.setMode(PinMode.DIGITAL_INPUT);
+        btnDispense.setPullResistance(PinPullResistance.PULL_UP);
+        btnPower.setMode(PinMode.DIGITAL_INPUT);
+        btnPower.setPullResistance(PinPullResistance.PULL_UP);
+        btnReset.setMode(PinMode.DIGITAL_INPUT);
+        btnReset.setPullResistance(PinPullResistance.PULL_UP);
+
+        // set shutdown state for this input pin
+        btnDispense.setShutdownOptions(true);
+        btnPower.setShutdownOptions(true);
+        btnReset.setShutdownOptions(true);
+        led1.high();
+        led2.high();
+        led3.high();
+
+        //GREEN
+//        led1.low();
+//        Gpio.delay(2000);
+//        led1.high();
+//        Gpio.delay(2000);
+        //BLUE
+        led2.low();
+        Gpio.delay(2000);
+        led2.high();
+        Gpio.delay(2000);
+        //RED
+//        led3.low();
+//        Gpio.delay(2000);
+//        led3.high();
+//        Gpio.delay(2000);
+
+        //Testing Barrier Relay
+        relayBarrier.setState(false);
+        Gpio.delay(2000);
+        relayBarrier.setState(true);
+        Gpio.delay(2000);
+
+        // create and register gpio pin listener
+        btnDispense.addListener(new GpioPinListenerDigital() {
+            @Override
+            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                // display pin state on console
+                System.out.println("Trying Welcome Message");
+                try {
+                    if (welcomeClip.isActive() == false) {
+                        welcomeClip.setFramePosition(0);
+                        welcomeClip.start();
+                        System.out.println("Welcome Message OK");
+                    }
+                } catch (Exception ex) {
+                    notifyError(ex);
+                }
+//                if (cardFromReader.compareToIgnoreCase("") != 0) {
+//                    cards.add(cardFromReader);
+//                    //byte[] buffer2 = {0x2E};
+//                    //comPort.writeBytes(buffer2, 1);
+//                }
+                System.out.println("Dispense NOW!");
+//                transistorDispense.pulse(500, true);
+                //led1.blink(2000);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+                }
+//               transistorDispense.pulse(500, true);
+                //transistorDispense.pulse(1250, true);
+                System.out.println("TRANSISTOR Open!");
+
+                System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());
+//                if (null != strUID && strUID.compareTo("") == 0) {
+//                    transistorDispense.pulse(1250, true);
+//                }
+
+                Thread.yield();
+
+                try {
+                    if (takeCardClip.isActive() == false) {
+                        takeCardClip.setFramePosition(0);
+                        takeCardClip.start();
+                        System.out.println("Take Card Please");
+                    }
+                } catch (Exception ex) {
+                    notifyError(ex);
+                }
+//                
+//                try {
+//                    relayBarrier.setState(PinState.LOW);
+//                    Thread.sleep(1000);
+//                    relayBarrier.setState(PinState.HIGH);
+//                    Thread.sleep(2000);
+//
+//                } catch (InterruptedException ex) {
+//                    java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//
+//                //Gpio.delayMicroseconds(1000);
+//                try {                    
+//                    relayBarrier.setState(PinState.LOW);
+//                    relayLights.setState(PinState.LOW);
+//                    relayFan.setState(PinState.LOW);
+//                    Thread.sleep(1000);
+//                
+//                    relayBarrier.setState(PinState.HIGH);
+//                    relayLights.setState(PinState.HIGH);
+//                    relayFan.setState(PinState.HIGH);
+//                    Thread.sleep(2000);
+////                relayFan.toggle();
+////                relayLights.toggle();
+//                } catch (InterruptedException ex) {
+//                    java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+            }
+
+        });
+
+        // create and register gpio pin listener
+        btnPower.addListener(new GpioPinListenerDigital() {
+            @Override
+            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                // display pin state on console
+                System.out.println("POWER LED Pressed!");
+                //led1.pulse(5000);
+                System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());
+                try {
+                    Runtime r = Runtime.getRuntime();
+                    Process p = r.exec("sudo reboot now");//u - update f - force
+                    Thread.sleep(30000);
+
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
+                }
+            }
+
+        });
+
+        // create and register gpio pin listener
+        btnReset.addListener(new GpioPinListenerDigital() {
+            @Override
+            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                // display pin state on console
+                System.out.println("RESET LED!");
+                //led1.pulse(5000);
+                System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());
+                try {
+                    Runtime r = Runtime.getRuntime();
+                    Process p = r.exec("sudo shutdown now");//u - update f - force
+                    Thread.sleep(30000);
+
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
+                }
+            }
+
+        });
+
+        carDetected.addListener(new GpioPinListenerDigital() {
+            @Override
+            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                // display pin state on console
+                if (event.getState() == PinState.LOW) {
+                    System.out.println("CAR is now Present");
+                }
+                System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());
+            }
+
+        });
     }
 
     public static void rfidReaderLoop(int sleeptime) throws InterruptedException {
@@ -901,15 +851,93 @@ public class MainStart {
         return new String(hexChars);
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    private void comms2POS(String messageOut) {
+
+        //System.out.println( "Loading contents of URL: " + POSserver );
+        try {
+            // Connect to the server
+            Socket socket = new Socket(CONSTANTS.POSserver, CONSTANTS.port);
+
+            // Create input and output streams to read from and write to the server
+            PrintStream out = new PrintStream(socket.getOutputStream());
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // Follow the HTTP protocol of GET <path> HTTP/1.0 followed by an empty line
+            out.println(messageOut);
+            out.println();
+
+            // Read data from the server until we finish reading the document
+            String line = in.readLine();
+            while (line != null && in != null) {
+                try {
+                    System.out.println(line);
+                    line = in.readLine();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            // Close our streams
+            in.close();
+            out.close();
+            socket.close();
+        } catch (java.net.ConnectException e) {
+            System.out.println("No POS Server available to receive Messages 1");
+            //e.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("No POS Server available to receive Messages 2");
+            //ex.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
         MainStart m = new MainStart();
         m.setupLED();
-        m.showInfo();
         m.startProgram();
-//        while (true) {            
+//        while (true) {
 //            Thread.sleep(5000L);
 //        }
-//        
+//
+    }
+
+    private boolean checkVIP_MasterList(String cardFromReader) {
+        DataBaseHandler dbh = new DataBaseHandler(CONSTANTS.serverIP);
+        try {
+            SystemStatus ss = new SystemStatus();
+            boolean online = ss.checkPING(CONSTANTS.serverIP);//LINUX USE ONLY - also check your root password
+
+            if (online == true) {
+                System.out.println("ONLINE");
+                System.out.print("`/");
+
+                //SAVE Card to DATABASE
+                boolean isValidVIP = dbh.findCGHVIPCard(cardFromReader);
+                if (isValidVIP) {
+                    //isUpdated = dbh.updateVIPEntryRecordWPix(cardFromReader, CONSTANTS.entranceID);
+                    //System.out.println(cardFromReader + "isUpdated" + isUpdated);
+                    //System.out.println(cardFromReader + "isUpdated" + isUpdated);
+                    cards.add(cardFromReader);  // For DTR Recording of VIP
+                    return true;
+                } else {
+                    //isInserted = dbh.writeVIPEntryWithPix(CONSTANTS.entranceID, cardFromReader, "R", "");
+                    //System.out.println(cardFromReader + " isInserted:" + isInserted);
+                    //System.out.println(cardFromReader + " isInserted:" + isInserted);
+                    return false;
+                }
+
+            } else if (online == false) {
+                System.out.println("OFFLINE");
+                System.out.print("-");
+            }
+            Thread.sleep(100);
+            //resetAdmin();
+            //Thread.sleep(2000);
+
+            System.out.println(".");
+
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        return false;
     }
 
 }

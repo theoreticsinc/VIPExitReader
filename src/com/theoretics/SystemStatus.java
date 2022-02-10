@@ -88,6 +88,33 @@ public class SystemStatus {
         return true;
     }
 
+    public boolean updateTimeOnChip(String serverTime) {
+        boolean status = false;
+        try {
+            if (serverTime.length() >= 19) {
+            System.out.println("serverTime = " + serverTime.substring(0, 19));        
+            String pingCmd = "/home/pi/clocker.py " + serverTime.substring(0, 19);
+            //String pingCmd = "date";
+
+            Runtime r = Runtime.getRuntime();
+            Process p = r.exec(pingCmd);
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String inputLine;
+            inputLine = in.readLine(); //LINUX ONLY - needs the second line as the result of the ping
+            System.out.println("RES:" + inputLine);
+
+            in.close();
+            status = false;
+            }
+            return status;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+
+    }
+
     public static void main(String args[]) throws Exception {
         SystemStatus ss = new SystemStatus();
         //System.out.println(ss.checkOnline());
