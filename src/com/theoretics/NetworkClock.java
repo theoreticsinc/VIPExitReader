@@ -50,7 +50,7 @@ public class NetworkClock implements Runnable {
                                 System.out.println(cardFromReader + "isUpdated" + isUpdated);
                                 cards.remove(0);
                             } else {
-                                isInserted = dbh.writeVIPEntryWithPix(CONSTANTS.entranceID, cardFromReader, "V", "");
+//                                isInserted = dbh.writeVIPEntryWithPix(CONSTANTS.entranceID, cardFromReader, "V", "");
                                 System.out.println(cardFromReader + " isInserted:" + isInserted);
                                 System.out.println(cardFromReader + " isInserted:" + isInserted);
                                 cards.remove(0);
@@ -61,7 +61,7 @@ public class NetworkClock implements Runnable {
                             System.out.print("-");
                         }
                         Thread.sleep(100);
-                        ss.updateTimeOnChip(serverTime);
+//                        ss.updateTimeOnChip(serverTime);
                         //resetAdmin();
                         //Thread.sleep(2000);
                     }

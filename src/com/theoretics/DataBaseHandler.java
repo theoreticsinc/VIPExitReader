@@ -236,8 +236,8 @@ public class DataBaseHandler extends Thread {
             //**********************
             uc1 = url.openConnection();
             uc2 = url.openConnection();
-            uc1.setConnectTimeout(1000);
-            uc2.setConnectTimeout(1000);
+            uc1.setConnectTimeout(3);
+            uc2.setConnectTimeout(3);
             String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             //String userpass = "root" + ":" + "Th30r3t1cs";
             String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
@@ -335,6 +335,8 @@ public class DataBaseHandler extends Thread {
             //**********************
             uc1 = url.openConnection();
             uc2 = url.openConnection();
+            uc1.setConnectTimeout(3);
+            uc2.setConnectTimeout(3);
             String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             //String userpass = "root" + ":" + "Th30r3t1cs";
             String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
@@ -462,6 +464,8 @@ public class DataBaseHandler extends Thread {
             //**********************
             uc1 = url.openConnection();
             uc2 = url.openConnection();
+            uc1.setConnectTimeout(3);
+            uc2.setConnectTimeout(3);
             String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             //String userpass = "root" + ":" + "Th30r3t1cs";
             String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
@@ -1394,6 +1398,8 @@ public class DataBaseHandler extends Thread {
             //**********************
             uc1 = url.openConnection();
             uc2 = url.openConnection();
+            uc1.setConnectTimeout(3);
+            uc2.setConnectTimeout(3);
             String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             //String userpass = "root" + ":" + "Th30r3t1cs";
             String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
@@ -1483,6 +1489,8 @@ public class DataBaseHandler extends Thread {
             //**********************
             uc1 = url.openConnection();
             uc2 = url.openConnection();
+            uc1.setConnectTimeout(3);
+            uc2.setConnectTimeout(3);
             String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             //String userpass = "root" + ":" + "Th30r3t1cs";
             String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));

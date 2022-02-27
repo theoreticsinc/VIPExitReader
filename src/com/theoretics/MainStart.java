@@ -20,11 +20,14 @@ import com.theoretics.DateConversionHandler;
 import com.theoretics.NetworkClock;
 import com.theoretics.RaspRC522;
 import java.io.BufferedReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.ConnectException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
@@ -93,69 +96,7 @@ public class MainStart {
 //        VIPs car = gson.fromJson(json, VIPs.class);
 //        
 //        System.out.println(car.brand +"["+ car.doors + "]");
-        try {
-            //welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/welcome2stmichael.wav"));
-            //welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/mrdh.wav"));
-            welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/welcome2cgh.wav"));
-            welcomeClip = AudioSystem.getClip();
-            welcomeClip.open(welcomeAudioIn);
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-        try {
-            pleasewaitAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/pleasewaitgb.wav"));
-            pleaseWaitClip = AudioSystem.getClip();
-            pleaseWaitClip.open(pleasewaitAudioIn);
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-        try {
-            thankyouAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/thankyou.wav"));
-            thankyouClip = AudioSystem.getClip();
-            thankyouClip.open(thankyouAudioIn);
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-        try {
-            beepAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/beep.wav"));
-            beepClip = AudioSystem.getClip();
-            beepClip.open(beepAudioIn);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        try {
-            takeCardAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/takecard.wav"));
-            takeCardClip = AudioSystem.getClip();
-            takeCardClip.open(takeCardAudioIn);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        try {
-            errorAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/beep.wav"));
-            errorClip = AudioSystem.getClip();
-            errorClip.open(errorAudioIn);
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-
-        try {
-            bgAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/bgmusic.wav"));
-            bgClip = AudioSystem.getClip();
-            bgClip.open(bgAudioIn);
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-
-        try {
-            if (welcomeClip.isActive() == false) {
-                welcomeClip.setFramePosition(0);
-                welcomeClip.start();
-                System.out.println("Welcome Message OK");
-            }
-        } catch (Exception ex) {
-            notifyError(ex);
-        }
-
+        
         this.cards = new ArrayList<String>();
 
         NetworkClock nc = new NetworkClock(this.cards);
@@ -220,13 +161,13 @@ public class MainStart {
 //        System.out.print("RELAYS Tested!");
         //Testing Remotely
         cards.add("ABCDE12");
-        System.out.println("Testing vip masterlist == " + checkVIP_MasterList("0285656A"));
-        System.out.println("Testing vip masterlist == " + checkVIP_MasterList("62445A6A"));
+//        System.out.println("Testing vip masterlist == " + checkVIP_MasterList("0285656A"));
+//        System.out.println("Testing vip masterlist == " + checkVIP_MasterList("62445A6A"));
         Date now = new Date();
         try {
             comms2POS("EXITVIP,WAS RESET," + now.toString() + ", ");
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logWrite("Initial Comm2POS Error: " + ex);
         }
         while (true) {
             System.out.print("!reader is good!");
@@ -243,6 +184,7 @@ public class MainStart {
                     text = scan.nextLine();
                 }
             } catch (Exception ex) {
+                logWrite("Scanner Error: " + ex);
             }
             if (null != text) {
                 try {
@@ -286,7 +228,7 @@ public class MainStart {
 
                     System.out.println("UID: " + cardUID.substring(6, 8) + cardUID.substring(4, 6) + cardUID.substring(2, 4) + cardUID.substring(0, 2));
                 } catch (Exception ex) {
-                    System.err.println("Card Conversion: " + ex);
+                    logWrite("Card Conversion: " + ex);
                 }
                 //System.out.println("" + stats);
 
@@ -313,7 +255,7 @@ public class MainStart {
                                 try {
                                     comms2POS("EXITVIP,card number:" + cardFromReader + "," + now.toString() + ", Doctor");
                                 } catch (Exception ex) {
-                                    ex.printStackTrace();
+                                    logWrite("comms2POS error:" + ex);
                                 }
                             } else {
                                 led1.high();
@@ -880,12 +822,11 @@ public class MainStart {
             in.close();
             out.close();
             socket.close();
-        } catch (java.net.ConnectException e) {
-            System.out.println("No POS Server available to receive Messages 1");
-            //e.printStackTrace();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             System.out.println("No POS Server available to receive Messages 2");
             //ex.printStackTrace();
+            logWrite("Socket Error: " + ex);
+            
         }
     }
 
@@ -935,9 +876,33 @@ public class MainStart {
             System.out.println(".");
 
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            logWrite("CheckMasterlist Error: " + ex);
         }
         return false;
+    }
+
+    private void logWrite(String error) {
+        FileWriter fileWriter = null;
+        PrintWriter printWriter = null;
+        try {
+            java.util.Date nowStamp = new java.util.Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMddHmmss");
+            String d2 = sdf.format(nowStamp);
+            String fileName = "VIP" + d2;
+            fileWriter = new FileWriter(fileName);
+            printWriter = new PrintWriter(fileWriter);
+            printWriter.print(error);
+//            printWriter.printf("Product name is %s and its price is %d $", "iPhone", 1000);            
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                printWriter.close();
+                fileWriter.close();
+            } catch (IOException ex) {
+                java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
 }

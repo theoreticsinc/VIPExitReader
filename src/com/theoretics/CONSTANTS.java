@@ -12,21 +12,22 @@ package com.theoretics;
 public class CONSTANTS {
     //MRDH
 //    public static String serverIP = "192.168.2.80";
-    public static String serverIP = "192.168.100.240";
-//    public static String serverIP = "192.168.1.80";
-    public static String entranceID = "VIP EXIT C";  //BOOTH 
-    public static String POSserver = "192.168.100.103";
-//    public static String POSserver = "192.168.1.80";
+//    public static String serverIP = "192.168.100.240";
+    public static String serverIP = "192.168.1.80";
+    public static String entranceID = "VIP EXIT B";  //BOOTH 
+//    public static String POSserver = "192.168.100.103";
+//    public static String POSserver = "192.168.100.229";
+    public static String POSserver = "192.168.1.23";
     public static int port = 5777;
     //public static String entranceID = "Entry Zone 2";  //BOOTH B
     
-    //public static String CAMipaddress1 = "192.168.100.217"; //Entry Camera Booth A
+    //public static String CAMipaddress1 = "192.168.100.219"; //Entry Camera Booth A
 //    public static String CAMipaddress1 = "192.168.100.220"; //Entry Camera Booth B
 //    public static String CAMipaddress2 = "192.168.100.220"; //Entry Camera Booth B
-    public static String CAMipaddress1 = "192.168.100.216"; //Entry Camera Booth C
-    public static String CAMipaddress2 = "192.168.100.216"; //Entry Camera Booth C
-//    public static String CAMipaddress1 = "192.168.1.68"; //Entry Camera Booth A
-//    public static String CAMipaddress2 = "192.168.1.68"; //Entry Camera Booth B
+//    public static String CAMipaddress1 = "192.168.100.216"; //Entry Camera Booth C
+//    public static String CAMipaddress2 = "192.168.100.216"; //Entry Camera Booth C
+    public static String CAMipaddress1 = "192.168.1.68"; //Entry Camera Booth A
+    public static String CAMipaddress2 = "192.168.1.68"; //Entry Camera Booth B
     public static String CAMusername = "admin";
     public static String CAMpassword = "user1234";
     public static String USERNAME = "base";   //root
