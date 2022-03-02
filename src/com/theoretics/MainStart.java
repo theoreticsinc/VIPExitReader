@@ -850,7 +850,7 @@ public class MainStart {
                 System.out.println("ONLINE");
                 System.out.print("`/");
 
-                //SAVE Card to DATABASE
+                //Find Card to DATABASE
                 boolean isValidVIP = dbh.findCGHVIPCard(cardFromReader);
                 if (isValidVIP) {
                     //isUpdated = dbh.updateVIPEntryRecordWPix(cardFromReader, CONSTANTS.entranceID);
@@ -888,7 +888,7 @@ public class MainStart {
             java.util.Date nowStamp = new java.util.Date();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMddHmmss");
             String d2 = sdf.format(nowStamp);
-            String fileName = "VIP" + d2;
+            String fileName = "/home/pi/VIP" + d2;
             fileWriter = new FileWriter(fileName);
             printWriter = new PrintWriter(fileWriter);
             printWriter.print(error);

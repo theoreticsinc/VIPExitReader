@@ -114,6 +114,30 @@ public class SystemStatus {
         return false;
 
     }
+    
+    public boolean checkTemp() {
+        //System.out.println(inputLine);        
+        boolean status;
+        try {
+            String pingCmd = "vcgencmd measure_temp";
+
+            Runtime r = Runtime.getRuntime();
+            Process p = r.exec(pingCmd);
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String inputLine;
+            inputLine = in.readLine(); //LINUX ONLY - needs the second line as the result of the ping
+            System.out.println(inputLine);
+
+            in.close();
+            status = false;
+            return status;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+
+    }
 
     public static void main(String args[]) throws Exception {
         SystemStatus ss = new SystemStatus();

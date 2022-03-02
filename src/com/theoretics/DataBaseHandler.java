@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import org.apache.commons.codec.binary.Base64;
 
 public class DataBaseHandler extends Thread {
 
@@ -221,8 +222,8 @@ public class DataBaseHandler extends Thread {
         });
         try {
             String loginPassword = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
-            String encoded = new sun.misc.BASE64Encoder().encode(loginPassword.getBytes());
-
+            Base64 base64 = new Base64();
+            String encoded = new String(base64.encode(loginPassword.getBytes()));
             //URL url = new URL("http://www.avajava.com/images/avajavalogo.jpg");
             //URL url = new URL("http://admin:user1234@192.168.1.64/Streaming/channels/1/picture");
             //URL url = new URL("http://192.168.1.64/onvif-http/snapshot?Profile_1");
@@ -240,7 +241,7 @@ public class DataBaseHandler extends Thread {
             uc2.setConnectTimeout(3);
             String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             //String userpass = "root" + ":" + "Th30r3t1cs";
-            String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
+            String basicAuth = "Basic " + new String(base64.encode(userpass.getBytes()));
             uc1.setRequestProperty("Authorization", basicAuth);
             uc2.setRequestProperty("Authorization", basicAuth);
             //InputStream in = uc.getInputStream();
@@ -328,8 +329,8 @@ public class DataBaseHandler extends Thread {
         
         try {
             String loginPassword = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
-            String encoded = new sun.misc.BASE64Encoder().encode(loginPassword.getBytes());
-
+            Base64 base64 = new Base64();
+            String encoded = new String(base64.encode(loginPassword.getBytes()));
             URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress1 + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
 
             //**********************
@@ -339,7 +340,7 @@ public class DataBaseHandler extends Thread {
             uc2.setConnectTimeout(3);
             String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             //String userpass = "root" + ":" + "Th30r3t1cs";
-            String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
+            String basicAuth = "Basic " + new String(base64.encode(userpass.getBytes()));
             uc1.setRequestProperty("Authorization", basicAuth);
             uc2.setRequestProperty("Authorization", basicAuth);
 
@@ -457,8 +458,8 @@ public class DataBaseHandler extends Thread {
         
         try {
             String loginPassword = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
-            String encoded = new sun.misc.BASE64Encoder().encode(loginPassword.getBytes());
-
+            Base64 base64 = new Base64();
+            String encoded = new String(base64.encode(loginPassword.getBytes()));
             URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress1 + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
 
             //**********************
@@ -468,7 +469,7 @@ public class DataBaseHandler extends Thread {
             uc2.setConnectTimeout(3);
             String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             //String userpass = "root" + ":" + "Th30r3t1cs";
-            String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
+            String basicAuth = "Basic " + new String(base64.encode(userpass.getBytes()));
             uc1.setRequestProperty("Authorization", basicAuth);
             uc2.setRequestProperty("Authorization", basicAuth);
 
@@ -658,7 +659,7 @@ public class DataBaseHandler extends Thread {
             }
             st.close();
             connection.close();
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println(ex.getMessage());
         }
@@ -679,7 +680,7 @@ public class DataBaseHandler extends Thread {
             }
             st.close();
             connection.close();
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println(ex.getMessage());
         }
@@ -688,7 +689,7 @@ public class DataBaseHandler extends Thread {
     }
 
     public Connection getConnection(boolean mainorder)
-            throws SQLException {
+            throws Exception {
         try {
             Class.forName(DRIVER_CLASS_NAME);
         } catch (ClassNotFoundException ex) {
@@ -1068,7 +1069,7 @@ public class DataBaseHandler extends Thread {
             st.close();
             connection.close();
             return name;
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return name;
@@ -1087,7 +1088,7 @@ public class DataBaseHandler extends Thread {
             st.close();
             connection.close();
             return data;
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return data;
@@ -1138,7 +1139,7 @@ public class DataBaseHandler extends Thread {
             st.close();
             connection.close();
             return data;
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return data;
@@ -1157,7 +1158,7 @@ public class DataBaseHandler extends Thread {
             st.close();
             connection.close();
             return data;
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return data;
@@ -1176,7 +1177,7 @@ public class DataBaseHandler extends Thread {
             st.close();
             connection.close();
             return data;
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return data;
@@ -1259,7 +1260,7 @@ public class DataBaseHandler extends Thread {
             st.close();
             connection.close();
             return rs;
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return rs;
@@ -1279,7 +1280,7 @@ public class DataBaseHandler extends Thread {
 
             //connection.close();
             return rs;
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return rs;
@@ -1391,8 +1392,8 @@ public class DataBaseHandler extends Thread {
         });
         try {
             String loginPassword = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
-            String encoded = new sun.misc.BASE64Encoder().encode(loginPassword.getBytes());
-
+            Base64 base64 = new Base64();
+            String encoded = new String(base64.encode(loginPassword.getBytes()));
             URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress1 + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
 
             //**********************
@@ -1402,7 +1403,7 @@ public class DataBaseHandler extends Thread {
             uc2.setConnectTimeout(3);
             String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             //String userpass = "root" + ":" + "Th30r3t1cs";
-            String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
+            String basicAuth = "Basic " + new String(base64.encode(userpass.getBytes()));
             uc1.setRequestProperty("Authorization", basicAuth);
             uc2.setRequestProperty("Authorization", basicAuth);
 
@@ -1482,8 +1483,8 @@ public class DataBaseHandler extends Thread {
         });
         try {
             String loginPassword = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
-            String encoded = new sun.misc.BASE64Encoder().encode(loginPassword.getBytes());
-
+            Base64 base64 = new Base64();
+            String encoded = new String(base64.encode(loginPassword.getBytes()));
             URL url = new URL("http://" + CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword + "@" + CONSTANTS.CAMipaddress1 + "/onvif-http/snapshot?Profile_1");//HIKVISION IP Cameras
 
             //**********************
@@ -1493,7 +1494,7 @@ public class DataBaseHandler extends Thread {
             uc2.setConnectTimeout(3);
             String userpass = CONSTANTS.CAMusername + ":" + CONSTANTS.CAMpassword;
             //String userpass = "root" + ":" + "Th30r3t1cs";
-            String basicAuth = "Basic " + new String(new sun.misc.BASE64Encoder().encode(userpass.getBytes()));
+            String basicAuth = "Basic " + new String(base64.encode(userpass.getBytes()));
             uc1.setRequestProperty("Authorization", basicAuth);
             uc2.setRequestProperty("Authorization", basicAuth);
 
