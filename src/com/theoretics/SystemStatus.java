@@ -18,6 +18,10 @@ import java.io.InputStreamReader;
 public class SystemStatus {
 
     public boolean checkPING(String ip) {
+        return true;
+    }
+    
+    public boolean checkPING2(String ip) {
         //System.out.println(inputLine);        
         boolean status;
         try {

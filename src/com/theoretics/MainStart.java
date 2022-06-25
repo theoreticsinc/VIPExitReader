@@ -29,12 +29,15 @@ import java.net.Socket;
 import java.net.ConnectException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.logging.Level;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -74,7 +77,7 @@ public class MainStart {
 
     //NOTE: Do not use GPIO 30-SDA0, 12-MOSI, 13-MISO, 14-DOES NOT WORK
     final GpioPinDigitalOutput led1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "GREENLED", PinState.HIGH);
-    final GpioPinDigitalOutput led2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "BLUELED", PinState.HIGH);
+    final GpioPinDigitalOutput led2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_08, "BLUELED", PinState.HIGH);
     final GpioPinDigitalOutput led3 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "REDLED", PinState.HIGH);
 
     final GpioPinDigitalInput btnPower = gpio.provisionDigitalInputPin(RaspiPin.GPIO_04, PinPullResistance.PULL_UP);
@@ -96,7 +99,6 @@ public class MainStart {
 //        VIPs car = gson.fromJson(json, VIPs.class);
 //        
 //        System.out.println(car.brand +"["+ car.doors + "]");
-        
         this.cards = new ArrayList<String>();
 
         NetworkClock nc = new NetworkClock(this.cards);
@@ -160,7 +162,22 @@ public class MainStart {
 //        relayLights.setState(true);        
 //        System.out.print("RELAYS Tested!");
         //Testing Remotely
-        cards.add("ABCDE12");
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Date now = new Date();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-M-dd H:mm:ss");
+                int minsOffset = 3;
+                Calendar calendar = Calendar.getInstance();     //NOW
+                calendar.setTime(now);
+                calendar.add(Calendar.MINUTE, minsOffset);
+                now = calendar.getTime();
+                String d2 = sdf.format(now);        
+                comms2WatchDog(d2);
+        
+            }
+        }, 5000, 65000);
+        //cards.add("72562862");
 //        System.out.println("Testing vip masterlist == " + checkVIP_MasterList("0285656A"));
 //        System.out.println("Testing vip masterlist == " + checkVIP_MasterList("62445A6A"));
         Date now = new Date();
@@ -171,7 +188,6 @@ public class MainStart {
         }
         while (true) {
             System.out.print("!reader is good!");
-
 //            try {
 //                comms2POS("EXITVIP,CDF07701, , ");
 //            } catch (Exception ex) {
@@ -241,6 +257,7 @@ public class MainStart {
                         cardFromReader = strUID.substring(0, 8).toUpperCase();
 //
                         if (cardFromReader.compareToIgnoreCase("") != 0) {
+                            //ThrNetworkClock.sleep(5000);
                             if (checkVIP_MasterList(cardFromReader)) {
                                 relayBarrier.setState(false);
                                 led1.low();
@@ -248,12 +265,16 @@ public class MainStart {
                                 led3.high();
                                 Gpio.delay(2000);
                                 relayBarrier.setState(true);
-                                Gpio.delay(2000);
                                 led1.high();
                                 led2.high();
                                 led3.high();
                                 try {
                                     comms2POS("EXITVIP,card number:" + cardFromReader + "," + now.toString() + ", Doctor");
+                                } catch (Exception ex) {
+                                    logWrite("comms2POS error:" + ex);
+                                }
+                                try {
+                                    deletedVIP_DTR(cardFromReader);
                                 } catch (Exception ex) {
                                     logWrite("comms2POS error:" + ex);
                                 }
@@ -280,14 +301,13 @@ public class MainStart {
                         // set second argument to 'true' use a blocking call
 //                    c.showWelcome(700, false);
                     }
-
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
+            
 //            strUID = null;
 //
-
 //            transistorDispense.pulse(500, true);
 //        transistorReject.pulse(500, true);
 //        System.out.println("Test Dispense");
@@ -565,10 +585,10 @@ public class MainStart {
 //        led1.high();
 //        Gpio.delay(2000);
         //BLUE
-        led2.low();
-        Gpio.delay(2000);
+        //led2.low();
+//        Gpio.delay(15000);
         led2.high();
-        Gpio.delay(2000);
+        //Gpio.delay(5000);
         //RED
 //        led3.low();
 //        Gpio.delay(2000);
@@ -826,8 +846,55 @@ public class MainStart {
             System.out.println("No POS Server available to receive Messages 2");
             //ex.printStackTrace();
             logWrite("Socket Error: " + ex);
-            
+
         }
+    }
+    
+    private void comms2WatchDog(String messageOut) {
+
+        //System.out.println( "Loading contents of URL: " + POSserver );
+        try {
+            // Connect to the server
+            Socket socket = new Socket("127.0.0.1", 7889);
+            socket.setSoTimeout(3000);
+            // Create input and output streams to read from and write to the server
+            PrintStream out = new PrintStream(socket.getOutputStream());
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // Follow the HTTP protocol of GET <path> HTTP/1.0 followed by an empty line
+            out.println(messageOut);
+            out.println();
+
+            // Read data from the server until we finish reading the document
+            /*String line = null;
+            if (in != null) {
+                line = in.readLine();
+            }
+            while (line != null && in != null) {
+                try {
+                    System.out.println(line);
+                    line = in.readLine();
+                } catch (Exception e) {
+                    line = null;
+                    in.close();
+                    out.close();
+                    socket.close();
+                    //e.printStackTrace();
+                }
+            }
+            // Close our streams
+            in.close();
+            out.close();
+            socket.close();
+             */
+        } catch (java.net.ConnectException e) {
+            System.out.println("ConnectException No POS Server available to receive Messages 1");
+            //e.printStackTrace();
+        } catch (Exception ex) {
+            System.out.println("No POS Server available to receive Messages 2");
+            ex.printStackTrace();
+        }
+
     }
 
     public static void main(String[] args) {
@@ -856,7 +923,48 @@ public class MainStart {
                     //isUpdated = dbh.updateVIPEntryRecordWPix(cardFromReader, CONSTANTS.entranceID);
                     //System.out.println(cardFromReader + "isUpdated" + isUpdated);
                     //System.out.println(cardFromReader + "isUpdated" + isUpdated);
-                    cards.add(cardFromReader);  // For DTR Recording of VIP
+                    //cards.add(cardFromReader);  // For DTR Recording of VIP
+                    return true;
+                } else {
+                    //isInserted = dbh.writeVIPEntryWithPix(CONSTANTS.entranceID, cardFromReader, "R", "");
+                    //System.out.println(cardFromReader + " isInserted:" + isInserted);
+                    //System.out.println(cardFromReader + " isInserted:" + isInserted);
+                    return false;
+                }
+
+            } else if (online == false) {
+                System.out.println("OFFLINE");
+                System.out.print("-");
+            }
+            Thread.sleep(100);
+            //resetAdmin();
+            //Thread.sleep(2000);
+
+            System.out.println(".");
+
+        } catch (Exception ex) {
+            logWrite("CheckMasterlist Error: " + ex);
+        }
+        return false;
+    }
+
+    private boolean deletedVIP_DTR(String cardFromReader) {
+        DataBaseHandler dbh = new DataBaseHandler(CONSTANTS.serverIP);
+        try {
+            SystemStatus ss = new SystemStatus();
+            boolean online = ss.checkPING(CONSTANTS.serverIP);//LINUX USE ONLY - also check your root password
+
+            if (online == true) {
+                System.out.println("ONLINE");
+                System.out.print("`/");
+
+                boolean isRecordedVIP = dbh.deleteVIP_DTR(cardFromReader);
+                //Find Card to DATABASE
+                if (isRecordedVIP) {
+                    //isUpdated = dbh.updateVIPEntryRecordWPix(cardFromReader, CONSTANTS.entranceID);
+                    //System.out.println(cardFromReader + "isUpdated" + isUpdated);
+                    //System.out.println(cardFromReader + "isUpdated" + isUpdated);
+                    //cards.add(cardFromReader);  // For DTR Recording of VIP
                     return true;
                 } else {
                     //isInserted = dbh.writeVIPEntryWithPix(CONSTANTS.entranceID, cardFromReader, "R", "");

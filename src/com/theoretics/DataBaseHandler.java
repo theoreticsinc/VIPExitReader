@@ -1355,6 +1355,7 @@ public class DataBaseHandler extends Thread {
     public boolean deleteVIP_DTR(String cardNumber) {
         try {
             connection = getConnection(false);
+            if (null!= connection) {
             st = (Statement) connection.createStatement();
             //String SQL = "INSERT INTO vips.dtr (`ID`, `CardCode`, `Vehicle`, `Plate`, `Timein`, `Operator`, `PC`, `PIC`, `PIC2`, `Lane`) VALUES "
             //       + "(NULL, '" + CardNumber + "', 'CAR' , NULL, NOW(), NULL, '" + EntryID + "', NULL, NULL, 'ENTRY')";    
@@ -1363,6 +1364,9 @@ public class DataBaseHandler extends Thread {
 
             st.close();
             connection.close();
+            } else {
+                return false;
+            }
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
