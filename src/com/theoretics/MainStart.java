@@ -1,3 +1,5 @@
+//Github Token
+//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
 package com.theoretics;
 
 import com.pi4j.wiringpi.Spi;
@@ -41,7 +43,6 @@ import java.util.TimerTask;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-//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
 public class MainStart {
 
     String version = "v.3.0.2";
